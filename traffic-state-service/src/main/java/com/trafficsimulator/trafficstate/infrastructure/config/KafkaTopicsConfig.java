@@ -1,0 +1,28 @@
+package com.trafficsimulator.trafficstate.infrastructure.config;
+
+import org.apache.kafka.clients.admin.NewTopic;
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
+import org.springframework.kafka.config.TopicBuilder;
+
+@Configuration
+public class KafkaTopicsConfig {
+    public static final String FLOW_INJECTED = "flow-injected";
+    public static final String TRAFFIC_LIGHT_ADDED = "traffic-light-added";
+    public static final String STREET_CONGESTED = "street-congested";
+
+    @Bean
+    NewTopic flowInjectedTopic() {
+        return TopicBuilder.name(FLOW_INJECTED).partitions(1).replicas(1).build();
+    }
+
+    @Bean
+    NewTopic trafficLightAddedTopic() {
+        return TopicBuilder.name(TRAFFIC_LIGHT_ADDED).partitions(1).replicas(1).build();
+    }
+
+    @Bean
+    NewTopic streetCongestedTopic() {
+        return TopicBuilder.name(STREET_CONGESTED).partitions(1).replicas(1).build();
+    }
+}
