@@ -1,8 +1,8 @@
 import { useCallback, useMemo, useState } from 'react';
-import DeckGL from '@deck.gl/react';
 import { GeoJsonLayer } from '@deck.gl/layers';
+import { MapboxOverlay, type MapboxOverlayProps } from '@deck.gl/mapbox';
 import type { PickingInfo } from '@deck.gl/core';
-import Map from 'react-map-gl/maplibre';
+import Map, { useControl, type ErrorEvent } from 'react-map-gl/maplibre';
 import type { Feature, Geometry } from 'geojson';
 import { INITIAL_VIEW_STATE, JOINVILLE_NETWORK, MAP_STYLE } from '../data/joinvilleNetwork';
 import {
@@ -14,7 +14,14 @@ import {
 import { useTrafficStore } from '../store/trafficStore';
 import { StreetTooltip, type HoverInfo } from './StreetTooltip';
 
-/** Deck.gl road-network layer over a MapLibre dark basemap, with hover picking + tooltip. */
+/** Adds a deck.gl overlay on top of the MapLibre base map (overlaid mode keeps the map visible). */
+function DeckGLOverlay(props: MapboxOverlayProps) {
+  const overlay = useControl<MapboxOverlay>(() => new MapboxOverlay(props));
+  overlay.setProps(props);
+  return null;
+}
+
+/** MapLibre dark basemap with a deck.gl road-network layer, hover picking + custom tooltip. */
 export function MapView() {
   const streets = useTrafficStore((s) => s.streets);
   const selectStreet = useTrafficStore((s) => s.selectStreet);
@@ -36,24 +43,6 @@ export function MapView() {
   );
 
   const colorKey = geojson.features.map((f) => f.properties.congestionLevel).join('|');
-
-  const layers = [
-    new GeoJsonLayer<StreetFeatureProperties>({
-      id: 'road-network',
-      data: geojson,
-      pickable: true,
-      stroked: true,
-      filled: false,
-      lineWidthUnits: 'pixels',
-      getLineWidth: 5,
-      lineWidthMinPixels: 4,
-      lineCapRounded: true,
-      lineJointRounded: true,
-      getLineColor: (f: Feature<Geometry, StreetFeatureProperties>) =>
-        CONGESTION_COLORS[f.properties.congestionLevel],
-      updateTriggers: { getLineColor: colorKey },
-    }),
-  ];
 
   const onHover = useCallback((info: PickingInfo<StreetFeature>) => {
     if (info.object) {
@@ -77,20 +66,42 @@ export function MapView() {
     [selectStreet],
   );
 
+  const layers = [
+    new GeoJsonLayer<StreetFeatureProperties>({
+      id: 'road-network',
+      data: geojson,
+      pickable: true,
+      stroked: true,
+      filled: false,
+      lineWidthUnits: 'pixels',
+      getLineWidth: 5,
+      lineWidthMinPixels: 4,
+      lineCapRounded: true,
+      lineJointRounded: true,
+      getLineColor: (f: Feature<Geometry, StreetFeatureProperties>) =>
+        CONGESTION_COLORS[f.properties.congestionLevel],
+      updateTriggers: { getLineColor: colorKey },
+    }),
+  ];
+
   return (
-    <div className="relative h-full w-full">
-      <DeckGL
+    <div className="absolute inset-0">
+      <Map
         initialViewState={INITIAL_VIEW_STATE}
-        controller
-        layers={layers}
-        onHover={onHover}
-        onClick={onClick}
-        getCursor={({ isDragging, isHovering }) =>
-          isDragging ? 'grabbing' : isHovering ? 'pointer' : 'grab'
-        }
+        mapStyle={MAP_STYLE}
+        style={{ width: '100%', height: '100%' }}
+        onLoad={() => console.info('[MAP] base map loaded and rendering tiles')}
+        onError={(e: ErrorEvent) => console.error('[MAP] base map error:', e.error)}
       >
-        <Map mapStyle={MAP_STYLE} />
-      </DeckGL>
+        <DeckGLOverlay
+          layers={layers}
+          onHover={onHover}
+          onClick={onClick}
+          getCursor={({ isDragging, isHovering }) =>
+            isDragging ? 'grabbing' : isHovering ? 'pointer' : 'grab'
+          }
+        />
+      </Map>
       {hover && <StreetTooltip hover={hover} />}
     </div>
   );
