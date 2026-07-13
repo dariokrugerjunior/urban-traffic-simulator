@@ -1,0 +1,27 @@
+# --- Project-structuring docs (kept local, not part of the portfolio repo) ---
+PROJECT_CONTEXT.md
+FRONTEND_CONTEXT.md
+frontend/FRONTEND_CONTEXT.md
+docs/
+
+# --- Build output ---
+target/
+build/
+*.jar
+!**/.mvn/wrapper/maven-wrapper.jar
+
+# --- IDE ---
+.idea/
+*.iml
+*.ipr
+.vscode/
+.settings/
+.project
+.classpath
+
+# --- OS ---
+.DS_Store
+Thumbs.db
+
+# --- Logs ---
+*.log
