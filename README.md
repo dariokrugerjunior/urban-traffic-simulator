@@ -1,5 +1,7 @@
 # Urban Traffic Simulator
 
+[![CI](https://github.com/dariokrugerjunior/urban-traffic-simulator/actions/workflows/ci.yml/badge.svg)](https://github.com/dariokrugerjunior/urban-traffic-simulator/actions/workflows/ci.yml)
+
 A **macroscopic** urban traffic simulator built as an **event-driven microservices** system.
 Instead of simulating individual vehicles, it models traffic as a *fluid* — comparing the
 **volume** of vehicles against a street's **hourly capacity** — and shows how congestion in
@@ -70,6 +72,8 @@ Persistence and messaging map to/from the domain in the infrastructure layer onl
 - **Server-Sent Events (SSE)** for real-time state updates (no WebSockets)
 - **JUnit 5**, **spring-kafka-test** (EmbeddedKafka) for testing
 - **Docker Compose** for orchestration
+- **Frontend:** React 18 + TypeScript (strict) + Vite, **Zustand**, **Tailwind CSS**, and
+  **MapLibre GL + deck.gl** for a token-free, real-time map
 
 ---
 
@@ -173,6 +177,29 @@ docker compose down -v
 
 ---
 
+## Frontend (live map)
+
+A React + TypeScript single-page app renders the Joinville network on a dark MapLibre map
+(no API token required) and recolors streets in real time as SSE events arrive.
+
+```bash
+cd frontend
+npm install
+npm run dev        # http://localhost:5173
+```
+
+With the backend running (`docker compose up`), the map connects to the SSE stream and:
+
+- **Hover** a street → a custom deck.gl-picked tooltip shows its name and live congestion level.
+- **Click** a street → an action panel lets you *Add Traffic Light* or inject vehicles.
+- Commands are sent to the backend REST API; the street recolors 🟢→🟡→🔴 when the backend
+  pushes the new state back over SSE — the UI never computes congestion itself.
+
+The frontend follows a strict separation: `services/` (all `fetch`/`EventSource`), `store/`
+(Zustand), `components/` (pure UI), `types/` (backend contracts, zero `any`).
+
+---
+
 ## Running the tests
 
 Each service is fully unit- and integration-tested (domain logic, use cases with fake ports,
@@ -192,9 +219,12 @@ cd routing-service && mvn test
 
 ```
 urban-traffic-simulator/
+├── .github/workflows/ci.yml      # backend (matrix) + frontend build/lint
 ├── docker-compose.yml            # Kafka (KRaft) + Postgres + both services
 ├── traffic-state-service/        # congestion state, JPA persistence, SSE, Kafka
 │   └── src/main/java/.../{domain,application,infrastructure}
-└── routing-service/              # Dijkstra GPS engine reacting to congestion
-    └── src/main/java/.../{domain,application,infrastructure}
+├── routing-service/              # Dijkstra GPS engine reacting to congestion
+│   └── src/main/java/.../{domain,application,infrastructure}
+└── frontend/                     # React + deck.gl live map
+    └── src/{types,services,store,components,data}
 ```
