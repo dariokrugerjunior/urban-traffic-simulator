@@ -15,6 +15,49 @@ class StreetTest {
     }
 
     @Test
+    void newStreetHasNoTrafficLightsAndFullEffectiveCapacity() {
+        Street street = streetWithCapacity(100);
+        assertEquals(0, street.trafficLightCount());
+        assertEquals(100, street.effectiveCapacity());
+    }
+
+    @Test
+    void addingTrafficLightReducesEffectiveCapacityByGreenRatio() {
+        Street street = new Street("s1", "Main Ave", "A", "B", 100, 40);
+        street.addTrafficLight(0.5);
+        assertEquals(1, street.trafficLightCount());
+        assertEquals(50, street.effectiveCapacity());       // 100 * 0.5
+        assertEquals(0.8, street.congestionRatio(), 1e-9);  // 40 / 50
+        assertEquals(CongestionLevel.HEAVY, street.congestionLevel());
+    }
+
+    @Test
+    void multipleTrafficLightsCompoundGreenRatio() {
+        Street street = new Street("s1", "Main Ave", "A", "B", 100, 30);
+        street.addTrafficLight(0.5);
+        street.addTrafficLight(0.5);
+        assertEquals(25, street.effectiveCapacity());       // 100 * 0.5^2
+        assertEquals(CongestionLevel.JAMMED, street.congestionLevel()); // 30/25 = 1.2
+    }
+
+    @Test
+    void effectiveCapacityNeverDropsBelowOne() {
+        Street street = new Street("s1", "Main Ave", "A", "B", 2, 1);
+        for (int i = 0; i < 20; i++) {
+            street.addTrafficLight(0.5);
+        }
+        assertTrue(street.effectiveCapacity() >= 1);
+    }
+
+    @Test
+    void rejectsGreenRatioOutsideZeroToOne() {
+        Street street = streetWithCapacity(100);
+        assertThrows(IllegalArgumentException.class, () -> street.addTrafficLight(0));
+        assertThrows(IllegalArgumentException.class, () -> street.addTrafficLight(1.5));
+        assertThrows(IllegalArgumentException.class, () -> street.addTrafficLight(-0.1));
+    }
+
+    @Test
     void newStreetStartsWithZeroVolumeAndIsFree() {
         Street street = streetWithCapacity(100);
 

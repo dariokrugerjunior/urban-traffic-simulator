@@ -27,6 +27,8 @@ public final class Street {
     private final int hourlyCapacity;
 
     private int currentVolume;
+    private int trafficLightCount;
+    private double greenRatio = 1.0;
 
     /**
      * Creates a street with an initial volume.
@@ -71,6 +73,62 @@ public final class Street {
     }
 
     /**
+     * Rehydration constructor for persistence adapters: restores the full state,
+     * including traffic-light count and green ratio.
+     *
+     * @throws IllegalArgumentException if any invariant is violated
+     */
+    public Street(String id,
+                  String name,
+                  String fromIntersectionId,
+                  String toIntersectionId,
+                  int hourlyCapacity,
+                  int currentVolume,
+                  int trafficLightCount,
+                  double greenRatio) {
+        this(id, name, fromIntersectionId, toIntersectionId, hourlyCapacity, currentVolume);
+        if (trafficLightCount < 0) {
+            throw new IllegalArgumentException("trafficLightCount must not be negative, but was: " + trafficLightCount);
+        }
+        if (greenRatio <= 0 || greenRatio > 1) {
+            throw new IllegalArgumentException("greenRatio must be in (0, 1], but was: " + greenRatio);
+        }
+        this.trafficLightCount = trafficLightCount;
+        this.greenRatio = greenRatio;
+    }
+
+    /**
+     * Adds a traffic light to this street, reducing its effective throughput.
+     * Each light applies the given green-time fraction, compounding.
+     *
+     * @param greenRatio green-time / cycle-time fraction; must be in (0, 1]
+     * @throws IllegalArgumentException if greenRatio is outside (0, 1]
+     */
+    public void addTrafficLight(double greenRatio) {
+        if (greenRatio <= 0 || greenRatio > 1) {
+            throw new IllegalArgumentException("greenRatio must be in (0, 1], but was: " + greenRatio);
+        }
+        this.greenRatio = greenRatio;
+        this.trafficLightCount++;
+    }
+
+    /**
+     * @return the throughput after traffic-light delays, always at least 1.
+     */
+    public int effectiveCapacity() {
+        double effective = hourlyCapacity * Math.pow(greenRatio, trafficLightCount);
+        return Math.max(1, (int) Math.floor(effective));
+    }
+
+    public int trafficLightCount() {
+        return trafficLightCount;
+    }
+
+    public double greenRatio() {
+        return greenRatio;
+    }
+
+    /**
      * Adds vehicles to the current volume (e.g. reacting to an injected traffic flow).
      *
      * @param vehicles number of vehicles to add; must not be negative
@@ -111,10 +169,10 @@ public final class Street {
     }
 
     /**
-     * @return the volume/capacity ratio; may exceed 1.0 when oversaturated.
+     * @return the volume / effective-capacity ratio; may exceed 1.0 when oversaturated.
      */
     public double congestionRatio() {
-        return (double) currentVolume / hourlyCapacity;
+        return (double) currentVolume / effectiveCapacity();
     }
 
     /**
