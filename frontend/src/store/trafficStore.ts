@@ -62,6 +62,21 @@ export const useTrafficStore = create<TrafficState>((set, get) => ({
         clearTimeout(routeTimer);
         routeTimer = setTimeout(() => get().refreshRoute(), 500);
       },
+      // A consolidated simulation tick — apply the whole batch in ONE store update.
+      onBatch: (states) => {
+        if (states.length === 0) {
+          return;
+        }
+        set((prev) => {
+          const streets = { ...prev.streets };
+          for (const s of states) {
+            streets[s.id] = s;
+          }
+          return { status: 'live', streets };
+        });
+        clearTimeout(routeTimer);
+        routeTimer = setTimeout(() => get().refreshRoute(), 500);
+      },
     });
 
     return disconnect;

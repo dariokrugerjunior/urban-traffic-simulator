@@ -26,10 +26,24 @@ public class SseTrafficBroadcaster implements TrafficStateBroadcaster {
 
     @Override
     public void broadcast(Street street) {
-        StreetStateView view = StreetStateView.from(street);
+        send("street-update", StreetStateView.from(street));
+    }
+
+    /**
+     * Pushes a consolidated batch of changed streets as a single {@code streets-update} event,
+     * so the frontend applies the whole tick in one render (avoids per-edge re-render storms).
+     */
+    public void broadcastBatch(List<Street> streets) {
+        if (streets.isEmpty()) {
+            return;
+        }
+        send("streets-update", streets.stream().map(StreetStateView::from).toList());
+    }
+
+    private void send(String event, Object data) {
         for (SseEmitter emitter : emitters) {
             try {
-                emitter.send(SseEmitter.event().name("street-update").data(view));
+                emitter.send(SseEmitter.event().name(event).data(data));
             } catch (IOException e) {
                 emitters.remove(emitter);
             }

@@ -7,6 +7,7 @@ const STREAM_URL = SSE_STREAM;
 
 export interface SseHandlers {
   onUpdate: (state: StreetStateView) => void;
+  onBatch?: (states: StreetStateView[]) => void;
   onOpen?: () => void;
   onError?: () => void;
 }
@@ -38,6 +39,16 @@ export function connectTrafficStream(handlers: SseHandlers): () => void {
       handlers.onUpdate(state);
     } catch (error) {
       console.error('[SSE] failed to parse street-update payload:', event.data, error);
+    }
+  });
+
+  // Consolidated simulation tick: a batch of changed streets in one event.
+  source.addEventListener('streets-update', (event: MessageEvent<string>) => {
+    try {
+      const states = JSON.parse(event.data) as StreetStateView[];
+      handlers.onBatch?.(states);
+    } catch (error) {
+      console.error('[SSE] failed to parse streets-update batch:', error);
     }
   });
 

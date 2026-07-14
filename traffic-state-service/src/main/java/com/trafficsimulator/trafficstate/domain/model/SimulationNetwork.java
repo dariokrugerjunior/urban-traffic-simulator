@@ -23,10 +23,13 @@ public class SimulationNetwork {
     private final Map<String, List<Street>> enterableFrom = new HashMap<>();
 
     public void addStreet(Street street) {
+        boolean isNew = !streets.containsKey(street.id());
         streets.put(street.id(), street);
-        enterableFrom.computeIfAbsent(street.fromIntersectionId(), k -> new ArrayList<>()).add(street);
-        if (!street.oneway()) {
-            enterableFrom.computeIfAbsent(street.toIntersectionId(), k -> new ArrayList<>()).add(street);
+        if (isNew) {
+            enterableFrom.computeIfAbsent(street.fromIntersectionId(), k -> new ArrayList<>()).add(street);
+            if (!street.oneway()) {
+                enterableFrom.computeIfAbsent(street.toIntersectionId(), k -> new ArrayList<>()).add(street);
+            }
         }
     }
 

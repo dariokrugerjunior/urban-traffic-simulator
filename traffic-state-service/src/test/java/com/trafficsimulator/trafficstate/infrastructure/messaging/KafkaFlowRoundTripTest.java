@@ -19,7 +19,8 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 
 @SpringBootTest(properties = {
     "spring.kafka.bootstrap-servers=${spring.embedded.kafka.brokers}",
-    "spring.kafka.consumer.auto-offset-reset=earliest"
+    "spring.kafka.consumer.auto-offset-reset=earliest",
+    "simulation.enabled=false"
 })
 @EmbeddedKafka(partitions = 1, topics = { KafkaTopicsConfig.FLOW_INJECTED })
 class KafkaFlowRoundTripTest {
