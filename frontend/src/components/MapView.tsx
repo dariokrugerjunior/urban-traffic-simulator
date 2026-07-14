@@ -12,6 +12,7 @@ import {
   STREET_GEOMETRY_BY_ID,
 } from '../data/joinvilleNetwork';
 import { fetchRoadNetwork, type RoadPath } from '../services/roadNetworkService';
+import { fetchCityNetwork, type SimStreet } from '../services/cityNetworkService';
 import {
   CONGESTION_COLORS,
   type StreetFeature,
@@ -36,6 +37,7 @@ export function MapView() {
   const { t } = useTranslation();
   const [hover, setHover] = useState<HoverInfo | null>(null);
   const [roads, setRoads] = useState<RoadPath[]>([]);
+  const [cityEdges, setCityEdges] = useState<SimStreet[]>([]);
   const [networkLoading, setNetworkLoading] = useState(true);
 
   // Geometry of the streets that make up the current computed route.
@@ -44,28 +46,38 @@ export function MapView() {
     [route],
   );
 
-  // Load the full road network once from the static asset in /public.
+  // Load the static assets once from /public: the full road backdrop and the simulated graph.
   useEffect(() => {
     fetchRoadNetwork()
       .then(setRoads)
       .catch((error) => console.error('[MAP]', error))
       .finally(() => setNetworkLoading(false));
+    fetchCityNetwork()
+      .then(setCityEdges)
+      .catch((error) => console.error('[MAP]', error));
   }, []);
 
-  // Merge live congestion levels into the static geometry.
-  const geojson = useMemo<StreetFeatureCollection>(
-    () => ({
-      type: 'FeatureCollection',
-      features: JOINVILLE_NETWORK.features.map((feature) => ({
-        ...feature,
-        properties: {
-          ...feature.properties,
-          congestionLevel: streets[feature.properties.id]?.congestionLevel ?? 'FREE',
-        },
-      })),
-    }),
-    [streets],
-  );
+  // Simulated streets = the curated corridor + the real city graph edges, colored live.
+  const geojson = useMemo<StreetFeatureCollection>(() => {
+    const corridor: StreetFeature[] = JOINVILLE_NETWORK.features.map((feature) => ({
+      ...feature,
+      properties: {
+        ...feature.properties,
+        congestionLevel: streets[feature.properties.id]?.congestionLevel ?? 'FREE',
+      },
+    }));
+    const edges: StreetFeature[] = cityEdges.map((edge) => ({
+      type: 'Feature',
+      properties: {
+        id: edge.id,
+        name: edge.name,
+        congestionLevel: streets[edge.id]?.congestionLevel ?? 'FREE',
+        kind: 'local',
+      },
+      geometry: { type: 'LineString', coordinates: edge.coords },
+    }));
+    return { type: 'FeatureCollection', features: [...corridor, ...edges] };
+  }, [streets, cityEdges]);
 
   const colorKey = geojson.features.map((f) => f.properties.congestionLevel).join('|');
 

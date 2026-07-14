@@ -1,6 +1,4 @@
-import type { StreetFeature, StreetFeatureCollection } from '../types/traffic';
-import { ARTERIALS } from './arterials';
-import { VILA_NOVA } from './vilaNova';
+import type { StreetFeatureCollection } from '../types/traffic';
 
 // Real street geometry from OpenStreetMap (same source as the CARTO basemap), so each
 // colored line traces the actual road. Coordinates are [lng, lat], simplified
@@ -70,22 +68,6 @@ export const JOINVILLE_NETWORK: StreetFeatureCollection = {
       properties: { id: 'st-xv-de-novembro', name: 'Rua XV de Novembro', congestionLevel: 'FREE' },
       geometry: { type: 'LineString', coordinates: XV_DE_NOVEMBRO },
     },
-    // Additional arterials (real OSM geometry) — also simulated and clickable.
-    ...ARTERIALS.map(
-      (arterial): StreetFeature => ({
-        type: 'Feature',
-        properties: { id: arterial.id, name: arterial.name, congestionLevel: 'FREE' },
-        geometry: { type: 'LineString', coordinates: arterial.coords },
-      }),
-    ),
-    // Full Vila Nova neighborhood — every drivable street, simulated (drawn thinner).
-    ...VILA_NOVA.map(
-      (street): StreetFeature => ({
-        type: 'Feature',
-        properties: { id: street.id, name: street.name, congestionLevel: 'FREE', kind: 'local' },
-        geometry: { type: 'LineString', coordinates: street.coords },
-      }),
-    ),
   ],
 };
 
