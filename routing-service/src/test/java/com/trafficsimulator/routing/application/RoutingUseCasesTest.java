@@ -35,6 +35,37 @@ class RoutingUseCasesTest {
                 find.find("I1", "I5").streetIds());
     }
 
+    private RoadNetwork chain() {
+        RoadNetwork n = new RoadNetwork();
+        for (String id : new String[]{"A", "B", "C", "D"}) {
+            n.addIntersection(new Intersection(id, id));
+        }
+        n.addStreet(new RouteStreet("e1", "E1", "A", "B", 1));
+        n.addStreet(new RouteStreet("e2", "E2", "B", "C", 1));
+        n.addStreet(new RouteStreet("e3", "E3", "C", "D", 1));
+        return n;
+    }
+
+    @Test
+    void betweenStreetsRoutesFromOriginExitToDestinationEntry() {
+        var find = new FindRouteBetweenStreetsUseCase(chain(), new DijkstraPathFinder());
+        // origin e1 (A→B) exits at B; destination e3 (C→D) enters at C; path B→C is e2.
+        assertEquals(List.of("e2"), find.find("e1", "e3").streetIds());
+    }
+
+    @Test
+    void closingAStreetMakesRoutesDetourOrFail() {
+        RoadNetwork n = chain();
+        var find = new FindRouteBetweenStreetsUseCase(n, new DijkstraPathFinder());
+        var block = new SetStreetBlockedUseCase(n);
+
+        block.setBlocked("e2", true);
+        assertEquals(List.of(), find.find("e1", "e3").streetIds()); // no way B→C
+
+        block.setBlocked("e2", false);
+        assertEquals(List.of("e2"), find.find("e1", "e3").streetIds());
+    }
+
     @Test
     void getNetworkStateExposesWeights() {
         RoadNetwork n = joinville();

@@ -34,6 +34,9 @@ public class DijkstraPathFinder {
             }
             double currentDist = dist.getOrDefault(current, Double.POSITIVE_INFINITY);
             for (RouteStreet edge : network.outgoing(current)) {
+                if (edge.blocked()) {
+                    continue; // closed street: never part of a path
+                }
                 double newDist = currentDist + edge.weight();
                 if (newDist < dist.getOrDefault(edge.to(), Double.POSITIVE_INFINITY)) {
                     dist.put(edge.to(), newDist);

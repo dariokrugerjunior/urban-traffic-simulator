@@ -1,5 +1,6 @@
 package com.trafficsimulator.routing.infrastructure.web;
 
+import com.trafficsimulator.routing.application.FindRouteBetweenStreetsUseCase;
 import com.trafficsimulator.routing.application.FindRouteUseCase;
 import com.trafficsimulator.routing.application.GetNetworkStateUseCase;
 import com.trafficsimulator.routing.domain.model.Route;
@@ -21,6 +22,7 @@ class RouteControllerTest {
 
     @Autowired MockMvc mvc;
     @MockitoBean FindRouteUseCase findRoute;
+    @MockitoBean FindRouteBetweenStreetsUseCase findRouteBetweenStreets;
     @MockitoBean GetNetworkStateUseCase networkState;
 
     @Test
@@ -33,5 +35,16 @@ class RouteControllerTest {
            .andExpect(jsonPath("$.found").value(true))
            .andExpect(jsonPath("$.totalCost").value(5.0))
            .andExpect(jsonPath("$.streets[0]").value("st-beira-rio"));
+    }
+
+    @Test
+    void returnsRouteBetweenStreetsJson() throws Exception {
+        when(findRouteBetweenStreets.find("st-a", "st-b"))
+            .thenReturn(new Route(List.of("st-mid"), List.of("nB", "nC"), 120.0, true));
+
+        mvc.perform(get("/api/routes/between").param("fromStreet", "st-a").param("toStreet", "st-b"))
+           .andExpect(status().isOk())
+           .andExpect(jsonPath("$.found").value(true))
+           .andExpect(jsonPath("$.streets[0]").value("st-mid"));
     }
 }

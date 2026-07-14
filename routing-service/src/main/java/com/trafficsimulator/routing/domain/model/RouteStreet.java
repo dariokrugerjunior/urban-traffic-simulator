@@ -11,6 +11,7 @@ public final class RouteStreet {
     private final String to;
     private final double baseWeight;
     private double penaltyFactor;
+    private boolean blocked;
 
     public RouteStreet(String id, String name, String from, String to, double baseWeight) {
         if (baseWeight <= 0) {
@@ -29,6 +30,15 @@ public final class RouteStreet {
             throw new IllegalArgumentException("penalty factor must be positive, but was: " + factor);
         }
         this.penaltyFactor = factor;
+    }
+
+    /** A closed street is skipped by the path finder, so every route detours around it. */
+    public boolean blocked() {
+        return blocked;
+    }
+
+    public void setBlocked(boolean blocked) {
+        this.blocked = blocked;
     }
 
     public double weight() {

@@ -9,7 +9,10 @@ import java.util.Map;
 /** In-memory directed graph of the city's streets. */
 public class RoadNetwork {
     private final Map<String, Intersection> intersections = new LinkedHashMap<>();
+    /** Canonical (first-added) directed edge per id — used for state and street→node resolution. */
     private final Map<String, RouteStreet> streets = new LinkedHashMap<>();
+    /** Every directed edge sharing an id (a two-way street has both directions). */
+    private final Map<String, List<RouteStreet>> byId = new HashMap<>();
     private final Map<String, List<RouteStreet>> adjacency = new HashMap<>();
 
     public void addIntersection(Intersection node) {
@@ -18,7 +21,8 @@ public class RoadNetwork {
     }
 
     public void addStreet(RouteStreet street) {
-        streets.put(street.id(), street);
+        streets.putIfAbsent(street.id(), street); // canonical = the first direction added
+        byId.computeIfAbsent(street.id(), k -> new ArrayList<>()).add(street);
         adjacency.computeIfAbsent(street.from(), k -> new ArrayList<>()).add(street);
     }
 
@@ -26,11 +30,23 @@ public class RoadNetwork {
         return adjacency.getOrDefault(nodeId, List.of());
     }
 
+    /** Applies a penalty to every direction of the street (a two-way street penalizes both). */
     public void penalize(String streetId, double factor) {
-        RouteStreet s = streets.get(streetId);
-        if (s != null) {
+        for (RouteStreet s : byId.getOrDefault(streetId, List.of())) {
             s.applyPenalty(factor);
         }
+    }
+
+    /** Closes or reopens a street (both directions) so the path finder detours. No-op if unknown. */
+    public void setBlocked(String streetId, boolean blocked) {
+        for (RouteStreet s : byId.getOrDefault(streetId, List.of())) {
+            s.setBlocked(blocked);
+        }
+    }
+
+    /** The canonical (from→to) street with this id, or {@code null} (used to resolve street→node). */
+    public RouteStreet street(String streetId) {
+        return streets.get(streetId);
     }
 
     public List<RouteStreet> streets() {

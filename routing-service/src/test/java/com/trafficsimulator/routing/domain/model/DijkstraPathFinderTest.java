@@ -48,4 +48,23 @@ class DijkstraPathFinderTest {
         Route route = finder.findShortest(joinville(), "I5", "I1"); // all edges directed away
         assertFalse(route.found());
     }
+
+    @Test
+    void detoursAroundAClosedStreet() {
+        RoadNetwork n = joinville();
+        n.setBlocked("st-beira-rio", true); // close the direct edge
+        Route route = finder.findShortest(n, "I1", "I5");
+        assertTrue(route.found());
+        assertEquals(List.of("st-joao-colin", "st-dona-francisca"), route.streetIds());
+    }
+
+    @Test
+    void reopeningRestoresTheShortPath() {
+        RoadNetwork n = joinville();
+        n.setBlocked("st-beira-rio", true);
+        n.setBlocked("st-beira-rio", false);
+        Route route = finder.findShortest(n, "I1", "I5");
+        assertTrue(route.found());
+        assertEquals(List.of("st-beira-rio"), route.streetIds());
+    }
 }
