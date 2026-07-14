@@ -7,4 +7,11 @@ export default defineConfig({
   server: {
     port: 5173,
   },
+  // @ts-expect-error `test` is a Vitest option; Vitest reads this config at runtime.
+  test: {
+    environment: 'jsdom',
+    globals: true,
+    setupFiles: ['./src/test/setup.ts'],
+    css: false,
+  },
 });

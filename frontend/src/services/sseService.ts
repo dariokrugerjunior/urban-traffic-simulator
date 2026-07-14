@@ -10,10 +10,12 @@ export interface SseHandlers {
   onError?: () => void;
 }
 
+// EventSource.readyState values (0/1/2). Hardcoded so this module can be imported in
+// environments without a global EventSource (e.g. jsdom under tests).
 const READY_STATE_LABELS: Record<number, string> = {
-  [EventSource.CONNECTING]: 'CONNECTING',
-  [EventSource.OPEN]: 'OPEN',
-  [EventSource.CLOSED]: 'CLOSED',
+  0: 'CONNECTING',
+  1: 'OPEN',
+  2: 'CLOSED',
 };
 
 /**
