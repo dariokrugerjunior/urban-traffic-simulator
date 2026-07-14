@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useTrafficStore } from '../store/trafficStore';
 import { addTrafficLight, injectFlow, releaseFlow, setTopology } from '../services/apiService';
-import { CONGESTION_HEX } from '../types/traffic';
+import { BLOCKED_HEX, CONGESTION_HEX } from '../types/traffic';
 
 /** Action panel for the selected street. Sends commands and waits for the SSE update. */
 export function StreetActionPanel() {
@@ -57,10 +57,15 @@ export function StreetActionPanel() {
       <div className="mt-4 flex items-center gap-2 rounded-xl border border-white/5 bg-white/5 px-3 py-2.5">
         <span
           className="h-3 w-3 rounded-full"
-          style={{ backgroundColor: CONGESTION_HEX[level], boxShadow: `0 0 10px ${CONGESTION_HEX[level]}` }}
+          style={{
+            backgroundColor: blocked ? BLOCKED_HEX : CONGESTION_HEX[level],
+            boxShadow: blocked ? 'none' : `0 0 10px ${CONGESTION_HEX[level]}`,
+          }}
         />
-        <span className="text-sm font-medium text-white">{t(`congestion.${level}`)}</span>
-        {street && (
+        <span className="text-sm font-medium text-white">
+          {blocked ? t('legend.blocked') : t(`congestion.${level}`)}
+        </span>
+        {street && !blocked && (
           <span className="ml-auto text-xs text-neutral-400">
             {t('panel.metrics', {
               volume: street.currentVolume,
