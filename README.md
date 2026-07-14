@@ -72,8 +72,9 @@ Persistence and messaging map to/from the domain in the infrastructure layer onl
 - **Server-Sent Events (SSE)** for real-time state updates (no WebSockets)
 - **JUnit 5**, **spring-kafka-test** (EmbeddedKafka) for testing
 - **Docker Compose** for orchestration
-- **Frontend:** React 18 + TypeScript (strict) + Vite, **Zustand**, **Tailwind CSS**, and
-  **MapLibre GL + deck.gl** for a token-free, real-time map
+- **Frontend:** React 18 + TypeScript (strict) + Vite, **Zustand**, **Tailwind CSS**,
+  **MapLibre GL + deck.gl** for a token-free real-time map, **react-i18next** (pt-BR/EN), and
+  **Vitest + Testing Library**
 
 ---
 
@@ -179,8 +180,8 @@ docker compose down -v
 
 ## Frontend (live map)
 
-A React + TypeScript single-page app renders the Joinville network on a dark MapLibre map
-(no API token required) and recolors streets in real time as SSE events arrive.
+A React + TypeScript single-page app renders Joinville on a dark MapLibre map (no API token
+required) and recolors the simulated streets in real time as SSE events arrive.
 
 ```bash
 cd frontend
@@ -190,13 +191,19 @@ npm run dev        # http://localhost:5173
 
 With the backend running (`docker compose up`), the map connects to the SSE stream and:
 
-- **Hover** a street → a custom deck.gl-picked tooltip shows its name and live congestion level.
-- **Click** a street → an action panel lets you *Add Traffic Light* or inject vehicles.
+- **Full road network** — Joinville's ~7,100 drivable roads (real OpenStreetMap geometry,
+  bundled as a static asset and drawn with a deck.gl `PathLayer`) form the base layer.
+- The **5 simulated streets** are drawn on top with real OSM geometry, thicker and colored by
+  congestion; **hover** shows a custom deck.gl-picked tooltip, **click** opens an action panel to
+  *Add Traffic Light* or inject vehicles.
 - Commands are sent to the backend REST API; the street recolors 🟢→🟡→🔴 when the backend
   pushes the new state back over SSE — the UI never computes congestion itself.
+- **i18n** — the interface is available in **pt-BR (default)** and **English**, with a language
+  switcher (react-i18next); the choice is persisted in `localStorage`.
 
 The frontend follows a strict separation: `services/` (all `fetch`/`EventSource`), `store/`
-(Zustand), `components/` (pure UI), `types/` (backend contracts, zero `any`).
+(Zustand), `components/` (pure UI), `types/` (backend contracts, zero `any`), `i18n/`
+(translations).
 
 ---
 
@@ -208,10 +215,14 @@ JPA slice tests, web slice tests, and EmbeddedKafka round-trips — including th
 ```bash
 cd traffic-state-service && mvn test
 cd routing-service && mvn test
+cd frontend && npm test          # Vitest + Testing Library (components, store, services)
 ```
 
 > Note: on JDK 25+, tests pass `-Dnet.bytebuddy.experimental=true` (configured in each `pom.xml`)
 > so Mockito's Byte Buddy backend can run.
+
+CI (GitHub Actions) runs the backend test matrix plus the frontend type-check, tests, and build
+on every push.
 
 ---
 
@@ -225,6 +236,6 @@ urban-traffic-simulator/
 │   └── src/main/java/.../{domain,application,infrastructure}
 ├── routing-service/              # Dijkstra GPS engine reacting to congestion
 │   └── src/main/java/.../{domain,application,infrastructure}
-└── frontend/                     # React + deck.gl live map
-    └── src/{types,services,store,components,data}
+└── frontend/                     # React + deck.gl live map (full OSM network + i18n)
+    └── src/{types,services,store,components,data,i18n}
 ```
