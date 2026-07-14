@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { GeoJsonLayer, PathLayer } from '@deck.gl/layers';
+import { GeoJsonLayer, PathLayer, ScatterplotLayer } from '@deck.gl/layers';
 import { MapboxOverlay, type MapboxOverlayProps } from '@deck.gl/mapbox';
 import type { PickingInfo } from '@deck.gl/core';
 import Map, { useControl, type ErrorEvent } from 'react-map-gl/maplibre';
@@ -13,6 +13,7 @@ import {
 } from '../data/joinvilleNetwork';
 import { fetchRoadNetwork, type RoadPath } from '../services/roadNetworkService';
 import { fetchCityNetwork, type SimStreet } from '../services/cityNetworkService';
+import { fetchSignals, type Signal } from '../services/signalsService';
 import {
   BLOCKED_COLOR,
   CONGESTION_COLORS,
@@ -39,6 +40,7 @@ export function MapView() {
   const [hover, setHover] = useState<HoverInfo | null>(null);
   const [roads, setRoads] = useState<RoadPath[]>([]);
   const [cityEdges, setCityEdges] = useState<SimStreet[]>([]);
+  const [signals, setSignals] = useState<Signal[]>([]);
   const [networkLoading, setNetworkLoading] = useState(true);
 
   // id → geometry for the real city edges (corridor geometry lives in STREET_GEOMETRY_BY_ID).
@@ -67,6 +69,9 @@ export function MapView() {
       .finally(() => setNetworkLoading(false));
     fetchCityNetwork()
       .then(setCityEdges)
+      .catch((error) => console.error('[MAP]', error));
+    fetchSignals()
+      .then(setSignals)
       .catch((error) => console.error('[MAP]', error));
   }, []);
 
@@ -164,6 +169,21 @@ export function MapView() {
       getLineColor: (f: Feature<Geometry, StreetFeatureProperties>) =>
         f.properties.blocked ? BLOCKED_COLOR : CONGESTION_COLORS[f.properties.congestionLevel],
       updateTriggers: { getLineColor: colorKey },
+    }),
+    // Real OSM traffic signals — small amber dots at their intersections.
+    new ScatterplotLayer<Signal>({
+      id: 'traffic-signals',
+      data: signals,
+      getPosition: (d) => d,
+      getFillColor: [234, 179, 8, 235],
+      getLineColor: [10, 10, 10, 220],
+      stroked: true,
+      radiusUnits: 'pixels',
+      getRadius: 3,
+      radiusMinPixels: 2,
+      radiusMaxPixels: 5,
+      lineWidthMinPixels: 1,
+      pickable: false,
     }),
   ];
 

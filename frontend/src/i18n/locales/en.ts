@@ -11,6 +11,7 @@ export const en = {
   legend: {
     title: 'Congestion',
     blocked: 'Closed',
+    signal: 'Traffic signal',
   },
   congestion: {
     FREE: 'Free flow',

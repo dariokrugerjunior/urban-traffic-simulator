@@ -11,6 +11,7 @@ export const pt = {
   legend: {
     title: 'Congestionamento',
     blocked: 'Fechada',
+    signal: 'Semáforo',
   },
   congestion: {
     FREE: 'Fluxo livre',

@@ -29,6 +29,12 @@ export function Legend() {
           />
           <span className="text-xs font-medium text-neutral-300">{t('legend.blocked')}</span>
         </div>
+        <div className="flex items-center gap-2.5">
+          <span className="flex h-2.5 w-6 items-center justify-center">
+            <span className="h-2 w-2 rounded-full bg-amber-500 ring-1 ring-black/60" />
+          </span>
+          <span className="text-xs font-medium text-neutral-300">{t('legend.signal')}</span>
+        </div>
       </div>
     </div>
   );
