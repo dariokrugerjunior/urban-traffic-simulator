@@ -12,13 +12,15 @@ one street dynamically **reroutes** a Dijkstra-based GPS engine through Apache K
 
 ## Demo
 
-![Live congestion rerouting on the Joinville map](assets/demo.gif)
+![Living traffic simulation and GPS rerouting on the Joinville map](assets/demo.gif)
 
-The GPS route from **I1 → I5** reroutes live as streets jam: it starts on **Beira-Rio**; once
-that street is congested (🔴) the route shifts to **João Colin + Dona Francisca**; congest João
-Colin too and it reroutes again via **Nove de Março + XV de Novembro + Dona Francisca** — each
-change driven entirely by Kafka events flowing from `traffic-state-service` to `routing-service`,
-and pushed to the UI over SSE.
+The whole Joinville network (~2,900 streets) is **alive**: a macroscopic model injects traffic at
+source streets each tick and propagates it across the graph, so congestion (🔴) builds and
+dissipates on its own. Pick an **origin** and **destination** by clicking two streets and the
+`routing-service` returns the shortest path over the full graph (weighted by real street length).
+**Close a street on that route** and the GPS **reroutes around it** — the closure travels as a
+Kafka event from `traffic-state-service` to `routing-service`, and every change is pushed to the UI
+over SSE, batched so the map stays smooth.
 
 ---
 
@@ -152,6 +154,25 @@ each other directly.
 ```bash
 curl -N http://localhost:8081/api/traffic/stream
 ```
+
+**5. Route across the full city graph and close a street to force a detour:**
+
+```bash
+# shortest path between two real streets (weighted by street length, in metres)
+curl -s "http://localhost:8082/api/routes/between?fromStreet=st-e79290809-0&toStreet=st-e88150312-0"
+# → 7 streets, ~801 m, passing through st-e79290828-0
+
+# close a street on that path (emits a StreetTopologyChanged Kafka event)
+curl -s -X PATCH http://localhost:8081/api/traffic/streets/st-e79290828-0/topology \
+  -H "Content-Type: application/json" -d '{"blocked":true}'
+
+# ask again — routing-service consumed the event and detours around the closure
+curl -s "http://localhost:8082/api/routes/between?fromStreet=st-e79290809-0&toStreet=st-e88150312-0"
+# → 9 streets, ~982 m, and st-e79290828-0 is gone from the path
+```
+
+The same closure also drops the street out of the live simulation (it drains and renders grey),
+and one-way ↔ two-way and traffic-source toggles use the same `.../topology` endpoint.
 
 You can also add a traffic light to shrink a street's capacity:
 
