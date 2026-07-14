@@ -1,11 +1,11 @@
-import { useCallback, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import { GeoJsonLayer, PathLayer } from '@deck.gl/layers';
 import { MapboxOverlay, type MapboxOverlayProps } from '@deck.gl/mapbox';
 import type { PickingInfo } from '@deck.gl/core';
 import Map, { useControl, type ErrorEvent } from 'react-map-gl/maplibre';
 import type { Feature, Geometry } from 'geojson';
 import { INITIAL_VIEW_STATE, JOINVILLE_NETWORK, MAP_STYLE } from '../data/joinvilleNetwork';
-import { JOINVILLE_ROADS } from '../data/roads';
+import { fetchRoadNetwork, type RoadPath } from '../services/roadNetworkService';
 import {
   CONGESTION_COLORS,
   type StreetFeature,
@@ -27,6 +27,14 @@ export function MapView() {
   const streets = useTrafficStore((s) => s.streets);
   const selectStreet = useTrafficStore((s) => s.selectStreet);
   const [hover, setHover] = useState<HoverInfo | null>(null);
+  const [roads, setRoads] = useState<RoadPath[]>([]);
+
+  // Load the full road network once from the static asset in /public.
+  useEffect(() => {
+    fetchRoadNetwork()
+      .then(setRoads)
+      .catch((error) => console.error('[MAP]', error));
+  }, []);
 
   // Merge live congestion levels into the static geometry.
   const geojson = useMemo<StreetFeatureCollection>(
@@ -69,9 +77,9 @@ export function MapView() {
 
   const layers = [
     // Full Joinville road network as a neutral base layer, under the simulated streets.
-    new PathLayer<[number, number][]>({
+    new PathLayer<RoadPath>({
       id: 'road-network-base',
-      data: JOINVILLE_ROADS,
+      data: roads,
       getPath: (d) => d,
       getColor: [124, 156, 201, 165],
       getWidth: 1.2,
