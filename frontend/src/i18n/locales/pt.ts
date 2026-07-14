@@ -44,6 +44,9 @@ export const pt = {
     cost: 'custo {{cost}}',
     none: 'Nenhuma rota disponível',
     loading: 'Calculando rota…',
+    setOrigin: 'Origem',
+    setDestination: 'Destino',
+    clear: 'limpar',
   },
   map: {
     loadingNetwork: 'Carregando malha viária…',

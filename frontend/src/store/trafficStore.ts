@@ -2,11 +2,12 @@ import { create } from 'zustand';
 import type { CongestionLevel, StreetStateView } from '../types/traffic';
 import { connectTrafficStream } from '../services/sseService';
 import { fetchStreets } from '../services/apiService';
-import { fetchRoute, type RouteView } from '../services/routeService';
+import { fetchRoute, fetchRouteBetweenStreets, type RouteView } from '../services/routeService';
 
 type ConnectionStatus = 'connecting' | 'live' | 'offline';
+type RouteEndpoint = 'origin' | 'destination';
 
-/** Demo route continuously recomputed by the routing-service as congestion changes. */
+/** Demo route (I1 → I5) shown until the user picks their own origin/destination streets. */
 export const ROUTE_START = 'I1';
 export const ROUTE_END = 'I5';
 
@@ -15,12 +16,19 @@ interface TrafficState {
   streets: Record<string, StreetStateView>;
   status: ConnectionStatus;
   selectedStreetId: string | null;
+  /** User-chosen route endpoints (street ids); null → fall back to the demo route. */
+  origin: string | null;
+  destination: string | null;
   /** Current shortest path from the routing-service (null until first loaded). */
   route: RouteView | null;
   /** Opens the SSE stream once and loads the initial snapshot. Returns a disposer. */
   connect: () => () => void;
   selectStreet: (id: string | null) => void;
-  /** Re-queries the routing-service for the demo route (I1 → I5). */
+  /** Sets the origin/destination street and recomputes the route once both are set. */
+  setRouteEndpoint: (kind: RouteEndpoint, id: string) => void;
+  /** Clears the user route, returning to the demo I1 → I5. */
+  clearRoute: () => void;
+  /** Re-queries the routing-service (user route if set, otherwise the demo I1 → I5). */
   refreshRoute: () => void;
   levelOf: (id: string) => CongestionLevel;
 }
@@ -31,6 +39,8 @@ export const useTrafficStore = create<TrafficState>((set, get) => ({
   streets: {},
   status: 'connecting',
   selectedStreetId: null,
+  origin: null,
+  destination: null,
   route: null,
 
   connect: () => {
@@ -84,8 +94,24 @@ export const useTrafficStore = create<TrafficState>((set, get) => ({
 
   selectStreet: (id) => set({ selectedStreetId: id }),
 
+  setRouteEndpoint: (kind, id) => {
+    set(kind === 'origin' ? { origin: id } : { destination: id });
+    get().refreshRoute();
+  },
+
+  clearRoute: () => {
+    set({ origin: null, destination: null });
+    get().refreshRoute();
+  },
+
   refreshRoute: () => {
-    fetchRoute(ROUTE_START, ROUTE_END)
+    const { origin, destination } = get();
+    // User route once both endpoints are picked; otherwise the demo I1 → I5.
+    const request =
+      origin && destination
+        ? fetchRouteBetweenStreets(origin, destination)
+        : fetchRoute(ROUTE_START, ROUTE_END);
+    request
       .then((route) => set({ route }))
       .catch(() => {
         // routing-service unavailable — leave the previous route as-is

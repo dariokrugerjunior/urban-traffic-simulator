@@ -44,6 +44,9 @@ export const en = {
     cost: 'cost {{cost}}',
     none: 'No route available',
     loading: 'Computing route…',
+    setOrigin: 'Origin',
+    setDestination: 'Destination',
+    clear: 'clear',
   },
   map: {
     loadingNetwork: 'Loading road network…',

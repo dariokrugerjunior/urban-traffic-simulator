@@ -10,6 +10,9 @@ export function StreetActionPanel() {
   const selectedId = useTrafficStore((s) => s.selectedStreetId);
   const street = useTrafficStore((s) => (selectedId ? s.streets[selectedId] : undefined));
   const close = useTrafficStore((s) => s.selectStreet);
+  const origin = useTrafficStore((s) => s.origin);
+  const destination = useTrafficStore((s) => s.destination);
+  const setRouteEndpoint = useTrafficStore((s) => s.setRouteEndpoint);
 
   const [pending, setPending] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -74,6 +77,34 @@ export function StreetActionPanel() {
             })}
           </span>
         )}
+      </div>
+
+      <div className="mt-4">
+        <p className="mb-1.5 text-[11px] font-semibold uppercase tracking-widest text-neutral-500">
+          {t('route.title')}
+        </p>
+        <div className="grid grid-cols-2 gap-2">
+          <button
+            onClick={() => setRouteEndpoint('origin', selectedId)}
+            className={`rounded-xl border px-3 py-2 text-sm font-medium transition ${
+              origin === selectedId
+                ? 'border-white/30 bg-white/15 text-white'
+                : 'border-white/10 bg-white/5 text-neutral-200 hover:bg-white/10'
+            }`}
+          >
+            {t('route.setOrigin')}
+          </button>
+          <button
+            onClick={() => setRouteEndpoint('destination', selectedId)}
+            className={`rounded-xl border px-3 py-2 text-sm font-medium transition ${
+              destination === selectedId
+                ? 'border-white/30 bg-white/15 text-white'
+                : 'border-white/10 bg-white/5 text-neutral-200 hover:bg-white/10'
+            }`}
+          >
+            {t('route.setDestination')}
+          </button>
+        </div>
       </div>
 
       <div className="mt-5 flex flex-col gap-2">

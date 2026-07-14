@@ -41,10 +41,22 @@ export function MapView() {
   const [cityEdges, setCityEdges] = useState<SimStreet[]>([]);
   const [networkLoading, setNetworkLoading] = useState(true);
 
-  // Geometry of the streets that make up the current computed route.
+  // id → geometry for the real city edges (corridor geometry lives in STREET_GEOMETRY_BY_ID).
+  const cityGeometryById = useMemo<Record<string, RoadPath>>(() => {
+    const map: Record<string, RoadPath> = {};
+    for (const edge of cityEdges) {
+      map[edge.id] = edge.coords;
+    }
+    return map;
+  }, [cityEdges]);
+
+  // Geometry of the streets that make up the current computed route (corridor or full graph).
   const routePaths = useMemo<RoadPath[]>(
-    () => (route?.streets ?? []).map((id) => STREET_GEOMETRY_BY_ID[id]).filter((p): p is RoadPath => Boolean(p)),
-    [route],
+    () =>
+      (route?.streets ?? [])
+        .map((id) => STREET_GEOMETRY_BY_ID[id] ?? cityGeometryById[id])
+        .filter((p): p is RoadPath => Boolean(p)),
+    [route, cityGeometryById],
   );
 
   // Load the static assets once from /public: the full road backdrop and the simulated graph.

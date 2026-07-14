@@ -24,3 +24,17 @@ export async function fetchRoute(start: string, end: string): Promise<RouteView>
   }
   return (await response.json()) as RouteView;
 }
+
+/**
+ * Fetches the shortest path between two streets (the UI picks edges, not intersections).
+ * The routing-service resolves the origin street's exit and the destination street's entry.
+ */
+export async function fetchRouteBetweenStreets(fromStreet: string, toStreet: string): Promise<RouteView> {
+  const response = await fetch(
+    `${BASE_URL}/between?fromStreet=${encodeURIComponent(fromStreet)}&toStreet=${encodeURIComponent(toStreet)}`,
+  );
+  if (!response.ok) {
+    throw new Error(`Failed to fetch route (${response.status})`);
+  }
+  return (await response.json()) as RouteView;
+}

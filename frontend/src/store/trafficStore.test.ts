@@ -1,6 +1,12 @@
-import { describe, it, expect } from 'vitest';
+import { describe, it, expect, vi } from 'vitest';
 import { useTrafficStore } from './trafficStore';
 import type { StreetStateView } from '../types/traffic';
+
+// Keep refreshRoute from hitting the network in these state-only tests.
+vi.mock('../services/routeService', () => ({
+  fetchRoute: vi.fn().mockResolvedValue({ found: false, streets: [], nodes: [], totalCost: 0 }),
+  fetchRouteBetweenStreets: vi.fn().mockResolvedValue({ found: false, streets: [], nodes: [], totalCost: 0 }),
+}));
 
 const jammed: StreetStateView = {
   id: 'st-x',
@@ -23,5 +29,17 @@ describe('trafficStore', () => {
   it('levelOf returns the stored level for a known street', () => {
     useTrafficStore.setState({ streets: { 'st-x': jammed } });
     expect(useTrafficStore.getState().levelOf('st-x')).toBe('JAMMED');
+  });
+
+  it('setRouteEndpoint records origin and destination; clearRoute resets them', () => {
+    const s = useTrafficStore.getState();
+    s.setRouteEndpoint('origin', 'st-a');
+    s.setRouteEndpoint('destination', 'st-b');
+    expect(useTrafficStore.getState().origin).toBe('st-a');
+    expect(useTrafficStore.getState().destination).toBe('st-b');
+
+    useTrafficStore.getState().clearRoute();
+    expect(useTrafficStore.getState().origin).toBeNull();
+    expect(useTrafficStore.getState().destination).toBeNull();
   });
 });
