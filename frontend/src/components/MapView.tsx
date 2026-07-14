@@ -97,7 +97,9 @@ export function MapView() {
       id: 'road-network-base',
       data: roads,
       getPath: (d) => d,
-      getColor: [124, 156, 201, 165],
+      // Muted free-flow green: the whole city reads as "flowing", and the thicker,
+      // brighter simulated streets stand out (and pop yellow/red when congested).
+      getColor: [34, 150, 94, 150],
       getWidth: 1.2,
       widthUnits: 'pixels',
       widthMinPixels: 0.7,

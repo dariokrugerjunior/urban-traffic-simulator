@@ -10,6 +10,16 @@ one street dynamically **reroutes** a Dijkstra-based GPS engine through Apache K
 > Built with Java 21, Spring Boot 3.4, Apache Kafka, PostgreSQL, and a strict
 > **Hexagonal Architecture (Ports & Adapters)** with a pure, framework-free domain.
 
+## Demo
+
+![Live congestion rerouting on the Joinville map](assets/demo.gif)
+
+The GPS route from **I1 → I5** reroutes live as streets jam: it starts on **Beira-Rio**; once
+that street is congested (🔴) the route shifts to **João Colin + Dona Francisca**; congest João
+Colin too and it reroutes again via **Nove de Março + XV de Novembro + Dona Francisca** — each
+change driven entirely by Kafka events flowing from `traffic-state-service` to `routing-service`,
+and pushed to the UI over SSE.
+
 ---
 
 ## Architecture
