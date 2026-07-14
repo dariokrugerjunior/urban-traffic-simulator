@@ -57,7 +57,7 @@ export const en = {
     active: 'active',
     comingSoon: 'coming soon',
     enter: 'Enter',
-    onlyJoinville: 'For now, only Joinville is live 😉',
+    onlyJoinville: 'For now, only Joinville is live.',
     footer: 'Event-driven architecture · Kafka · OpenStreetMap data',
   },
 } as const;

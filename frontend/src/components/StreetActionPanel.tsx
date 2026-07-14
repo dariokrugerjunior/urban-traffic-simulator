@@ -3,6 +3,15 @@ import { useTranslation } from 'react-i18next';
 import { useTrafficStore } from '../store/trafficStore';
 import { addTrafficLight, injectFlow, releaseFlow, setTopology } from '../services/apiService';
 import { BLOCKED_HEX, CONGESTION_HEX } from '../types/traffic';
+import {
+  ArrowBothIcon,
+  ArrowRightIcon,
+  BlockIcon,
+  RemoveSourceIcon,
+  ReopenIcon,
+  SourceIcon,
+  TrafficLightIcon,
+} from './icons';
 
 /** Action panel for the selected street. Sends commands and waits for the SSE update. */
 export function StreetActionPanel() {
@@ -113,7 +122,7 @@ export function StreetActionPanel() {
           onClick={() => run(() => addTrafficLight(selectedId, 0.5))}
           className="flex items-center justify-center gap-2 rounded-xl bg-amber-500/90 px-4 py-2.5 text-sm font-semibold text-neutral-950 transition hover:bg-amber-400 disabled:opacity-50"
         >
-          <span className="text-base leading-none">🚦</span> {t('panel.addTrafficLight')}
+          <TrafficLightIcon className="h-4 w-4" /> {t('panel.addTrafficLight')}
         </button>
 
         <div>
@@ -172,7 +181,9 @@ export function StreetActionPanel() {
             className="flex items-center justify-between rounded-xl border border-white/10 bg-white/5 px-3 py-2.5 text-sm font-medium text-neutral-200 transition hover:bg-white/10 disabled:opacity-50"
           >
             <span>{oneway ? t('panel.makeTwoWay') : t('panel.makeOneWay')}</span>
-            <span className="text-xs text-neutral-500">{oneway ? '→' : '↔'}</span>
+            <span className="text-neutral-500">
+              {oneway ? <ArrowRightIcon className="h-4 w-4" /> : <ArrowBothIcon className="h-4 w-4" />}
+            </span>
           </button>
           <button
             disabled={pending}
@@ -184,7 +195,7 @@ export function StreetActionPanel() {
             }`}
           >
             <span>{blocked ? t('panel.reopenStreet') : t('panel.blockStreet')}</span>
-            <span className="text-base leading-none">{blocked ? '🔓' : '⛔'}</span>
+            {blocked ? <ReopenIcon className="h-4 w-4" /> : <BlockIcon className="h-4 w-4" />}
           </button>
           <button
             disabled={pending}
@@ -192,7 +203,7 @@ export function StreetActionPanel() {
             className="flex items-center justify-between rounded-xl border border-white/10 bg-white/5 px-3 py-2.5 text-sm font-medium text-neutral-200 transition hover:bg-white/10 disabled:opacity-50"
           >
             <span>{isSource ? t('panel.unmarkSource') : t('panel.markSource')}</span>
-            <span className="text-base leading-none">{isSource ? '🚏' : '➕'}</span>
+            {isSource ? <RemoveSourceIcon className="h-4 w-4" /> : <SourceIcon className="h-4 w-4" />}
           </button>
         </div>
       </div>

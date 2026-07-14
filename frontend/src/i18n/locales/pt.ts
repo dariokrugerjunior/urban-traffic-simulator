@@ -57,7 +57,7 @@ export const pt = {
     active: 'ativo',
     comingSoon: 'em breve',
     enter: 'Entrar',
-    onlyJoinville: 'Por enquanto, só Joinville está no ar 😉',
+    onlyJoinville: 'Por enquanto, só Joinville está no ar.',
     footer: 'Arquitetura event-driven · Kafka · dados OpenStreetMap',
   },
 } as const;
