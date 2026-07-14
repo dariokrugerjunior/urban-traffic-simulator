@@ -1,4 +1,4 @@
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { MapView } from './components/MapView';
 import { Legend } from './components/Legend';
@@ -6,13 +6,15 @@ import { ConnectionStatus } from './components/ConnectionStatus';
 import { StreetActionPanel } from './components/StreetActionPanel';
 import { LanguageSwitcher } from './components/LanguageSwitcher';
 import { RoutePanel } from './components/RoutePanel';
+import { LandingScreen } from './components/LandingScreen';
 import { useTrafficStore } from './store/trafficStore';
 
-export default function App() {
+/** The simulator itself — mounted only after the user enters, so the SSE stream opens then. */
+function Simulator() {
   const { t } = useTranslation();
   const connect = useTrafficStore((s) => s.connect);
 
-  // Open the SSE stream exactly once for the app lifetime.
+  // Open the SSE stream exactly once, when the simulator mounts.
   useEffect(() => connect(), [connect]);
 
   return (
@@ -47,4 +49,9 @@ export default function App() {
       </div>
     </div>
   );
+}
+
+export default function App() {
+  const [entered, setEntered] = useState(false);
+  return entered ? <Simulator /> : <LandingScreen onEnter={() => setEntered(true)} />;
 }

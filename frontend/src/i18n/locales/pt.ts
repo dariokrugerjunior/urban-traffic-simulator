@@ -51,4 +51,13 @@ export const pt = {
   map: {
     loadingNetwork: 'Carregando malha viária…',
   },
+  landing: {
+    tagline: 'Simulação viva de mobilidade urbana',
+    searchPlaceholder: 'Digite sua cidade…',
+    active: 'ativo',
+    comingSoon: 'em breve',
+    enter: 'Entrar',
+    onlyJoinville: 'Por enquanto, só Joinville está no ar 😉',
+    footer: 'Arquitetura event-driven · Kafka · dados OpenStreetMap',
+  },
 } as const;

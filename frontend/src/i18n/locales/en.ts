@@ -51,4 +51,13 @@ export const en = {
   map: {
     loadingNetwork: 'Loading road network…',
   },
+  landing: {
+    tagline: 'A living simulation of urban mobility',
+    searchPlaceholder: 'Type your city…',
+    active: 'active',
+    comingSoon: 'coming soon',
+    enter: 'Enter',
+    onlyJoinville: 'For now, only Joinville is live 😉',
+    footer: 'Event-driven architecture · Kafka · OpenStreetMap data',
+  },
 } as const;
