@@ -12,6 +12,7 @@ public class KafkaTopicsConfig {
     public static final String TRAFFIC_LIGHT_ADDED = "traffic-light-added";
     public static final String STREET_CONGESTED = "street-congested";
     public static final String STREET_CLEARED = "street-cleared";
+    public static final String STREET_TOPOLOGY_CHANGED = "street-topology-changed";
 
     @Bean
     NewTopic flowInjectedTopic() {
@@ -36,5 +37,10 @@ public class KafkaTopicsConfig {
     @Bean
     NewTopic streetClearedTopic() {
         return TopicBuilder.name(STREET_CLEARED).partitions(1).replicas(1).build();
+    }
+
+    @Bean
+    NewTopic streetTopologyChangedTopic() {
+        return TopicBuilder.name(STREET_TOPOLOGY_CHANGED).partitions(1).replicas(1).build();
     }
 }

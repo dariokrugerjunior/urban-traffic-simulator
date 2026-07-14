@@ -4,11 +4,13 @@ import com.trafficsimulator.trafficstate.application.GetTrafficSnapshotUseCase;
 import com.trafficsimulator.trafficstate.infrastructure.config.KafkaTopicsConfig;
 import com.trafficsimulator.trafficstate.infrastructure.messaging.event.FlowInjectedEvent;
 import com.trafficsimulator.trafficstate.infrastructure.messaging.event.FlowReleasedEvent;
+import com.trafficsimulator.trafficstate.infrastructure.messaging.event.StreetTopologyChangedEvent;
 import com.trafficsimulator.trafficstate.infrastructure.messaging.event.TrafficLightAddedEvent;
 import com.trafficsimulator.trafficstate.infrastructure.web.dto.AddTrafficLightRequest;
 import com.trafficsimulator.trafficstate.infrastructure.web.dto.InjectFlowRequest;
 import com.trafficsimulator.trafficstate.infrastructure.web.dto.ReleaseFlowRequest;
 import com.trafficsimulator.trafficstate.infrastructure.web.dto.StreetStateView;
+import com.trafficsimulator.trafficstate.infrastructure.web.dto.UpdateTopologyRequest;
 import org.springframework.http.ResponseEntity;
 import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.web.bind.annotation.*;
@@ -53,6 +55,15 @@ public class TrafficCommandController {
         double greenRatio = request == null ? 0.5 : request.greenRatioOrDefault();
         kafkaTemplate.send(KafkaTopicsConfig.TRAFFIC_LIGHT_ADDED, id,
                 new TrafficLightAddedEvent(id, greenRatio, Instant.now()));
+        return ResponseEntity.accepted().build();
+    }
+
+    @PatchMapping("/streets/{id}/topology")
+    public ResponseEntity<Void> updateTopology(@PathVariable String id,
+                                               @RequestBody UpdateTopologyRequest request) {
+        kafkaTemplate.send(KafkaTopicsConfig.STREET_TOPOLOGY_CHANGED, id,
+                new StreetTopologyChangedEvent(id, request.oneway(), request.blocked(),
+                        request.source(), Instant.now()));
         return ResponseEntity.accepted().build();
     }
 

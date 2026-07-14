@@ -11,7 +11,9 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.UncheckedIOException;
 import java.util.ArrayList;
+import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.Set;
 
 /**
  * Holds the in-memory road graph and runs the macroscopic simulation. This is the runtime
@@ -24,6 +26,9 @@ import java.util.List;
 public class SimulationEngine {
 
     private final SimulationNetwork network = new SimulationNetwork();
+
+    /** Ids edited by a topology change since the last flush, so the SSE batch force-includes them. */
+    private final Set<String> topologyChanged = new LinkedHashSet<>();
 
     private final double outRate;
     private final double decay;
@@ -95,6 +100,38 @@ public class SimulationEngine {
     /** Runs {@code action} with exclusive access to the network (for reads/mutations). */
     public synchronized <T> T withNetwork(java.util.function.Function<SimulationNetwork, T> action) {
         return action.apply(network);
+    }
+
+    /**
+     * Applies a partial topology edit (null fields are left unchanged) and marks the street so the
+     * next SSE flush includes it even if its congestion level did not change. Thread-safe.
+     */
+    public synchronized void applyTopology(String id, Boolean oneway, Boolean blocked, Boolean source) {
+        if (oneway != null) {
+            network.setOneway(id, oneway);
+        }
+        if (blocked != null) {
+            network.setBlocked(id, blocked);
+        }
+        if (source != null) {
+            network.setSource(id, source);
+        }
+        if (network.get(id) != null) {
+            topologyChanged.add(id);
+        }
+    }
+
+    /** Returns and clears the streets edited since the last call (for the next SSE flush). */
+    public synchronized List<Street> drainTopologyChanged() {
+        List<Street> result = new ArrayList<>(topologyChanged.size());
+        for (String id : topologyChanged) {
+            Street s = network.get(id);
+            if (s != null) {
+                result.add(s);
+            }
+        }
+        topologyChanged.clear();
+        return result;
     }
 
     private record Edge(String id, String name, int capacity, String nodeA, String nodeB, boolean oneway) { }

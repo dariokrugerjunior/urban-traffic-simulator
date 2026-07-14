@@ -66,6 +66,16 @@ public class SimulationScheduler {
             return null;
         });
 
+        // Force-include streets whose topology changed (a one-way/source toggle does not move
+        // volume, so it would otherwise be invisible until traffic reroutes).
+        java.util.Set<String> ids = new java.util.HashSet<>();
+        changed.forEach(s -> ids.add(s.id()));
+        for (Street s : engine.drainTopologyChanged()) {
+            if (ids.add(s.id())) {
+                changed.add(s);
+            }
+        }
+
         // Emit outside the lock.
         nowCongested.forEach(congestionPublisher::publishCongested);
         nowCleared.forEach(congestionPublisher::publishCleared);
