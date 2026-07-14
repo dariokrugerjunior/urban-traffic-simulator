@@ -127,8 +127,9 @@ export function MapView() {
       stroked: true,
       filled: false,
       lineWidthUnits: 'pixels',
-      getLineWidth: 5,
-      lineWidthMinPixels: 4,
+      getLineWidth: (f: Feature<Geometry, StreetFeatureProperties>) =>
+        f.properties.kind === 'local' ? 2.5 : 5,
+      lineWidthMinPixels: 2,
       lineCapRounded: true,
       lineJointRounded: true,
       getLineColor: (f: Feature<Geometry, StreetFeatureProperties>) =>

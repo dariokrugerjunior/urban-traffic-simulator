@@ -1,5 +1,6 @@
 import type { StreetFeature, StreetFeatureCollection } from '../types/traffic';
 import { ARTERIALS } from './arterials';
+import { VILA_NOVA } from './vilaNova';
 
 // Real street geometry from OpenStreetMap (same source as the CARTO basemap), so each
 // colored line traces the actual road. Coordinates are [lng, lat], simplified
@@ -77,6 +78,14 @@ export const JOINVILLE_NETWORK: StreetFeatureCollection = {
         geometry: { type: 'LineString', coordinates: arterial.coords },
       }),
     ),
+    // Full Vila Nova neighborhood — every drivable street, simulated (drawn thinner).
+    ...VILA_NOVA.map(
+      (street): StreetFeature => ({
+        type: 'Feature',
+        properties: { id: street.id, name: street.name, congestionLevel: 'FREE', kind: 'local' },
+        geometry: { type: 'LineString', coordinates: street.coords },
+      }),
+    ),
   ],
 };
 
@@ -93,11 +102,11 @@ export const STREET_NAME_BY_ID: Record<string, string> = Object.fromEntries(
   JOINVILLE_NETWORK.features.map((feature) => [feature.properties.id, feature.properties.name]),
 );
 
-/** Initial camera framing the city network, with the simulated streets still prominent. */
+/** Initial camera framing the fully-simulated Vila Nova neighborhood plus the routing corridor. */
 export const INITIAL_VIEW_STATE = {
-  longitude: -48.846,
-  latitude: -26.287,
-  zoom: 12.6,
+  longitude: -48.878,
+  latitude: -26.289,
+  zoom: 12.7,
   pitch: 0,
   bearing: 0,
 };

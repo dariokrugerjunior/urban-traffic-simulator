@@ -1,10 +1,14 @@
 package com.trafficsimulator.trafficstate.infrastructure.config;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.trafficsimulator.trafficstate.domain.model.Street;
 import com.trafficsimulator.trafficstate.domain.port.StreetRepository;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.stereotype.Component;
 
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.UncheckedIOException;
 import java.util.List;
 
 /** Seeds the Joinville road network on startup (idempotent) so the MVP boots ready to use. */
@@ -49,5 +53,25 @@ public class NetworkSeeder implements CommandLineRunner {
             new Street("st-aube", "Rua Aube", "st-aube-a", "st-aube-b", 1600)
         );
         streets.forEach(repository::save);
+
+        // Bulk-seed the full Vila Nova neighborhood from a bundled resource.
+        seedFromResource("/vila-nova-streets.json");
     }
+
+    private void seedFromResource(String resource) {
+        try (InputStream in = getClass().getResourceAsStream(resource)) {
+            if (in == null) {
+                return;
+            }
+            SeedStreet[] rows = new ObjectMapper().readValue(in, SeedStreet[].class);
+            for (SeedStreet row : rows) {
+                String name = (row.name() == null || row.name().isBlank()) ? "Rua sem nome" : row.name();
+                repository.save(new Street(row.id(), name, row.id() + "-a", row.id() + "-b", row.capacity()));
+            }
+        } catch (IOException e) {
+            throw new UncheckedIOException("Failed to seed streets from " + resource, e);
+        }
+    }
+
+    private record SeedStreet(String id, String name, int capacity) { }
 }

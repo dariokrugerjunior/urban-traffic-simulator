@@ -18,6 +18,8 @@ export interface StreetFeatureProperties {
   id: string;
   name: string;
   congestionLevel: CongestionLevel;
+  /** 'local' = neighborhood street (drawn thinner); undefined = arterial/core (thicker). */
+  kind?: 'local';
 }
 
 export type StreetFeature = GeoJSON.Feature<GeoJSON.LineString, StreetFeatureProperties>;
