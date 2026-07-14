@@ -1,10 +1,11 @@
 import { useCallback, useMemo, useState } from 'react';
-import { GeoJsonLayer } from '@deck.gl/layers';
+import { GeoJsonLayer, PathLayer } from '@deck.gl/layers';
 import { MapboxOverlay, type MapboxOverlayProps } from '@deck.gl/mapbox';
 import type { PickingInfo } from '@deck.gl/core';
 import Map, { useControl, type ErrorEvent } from 'react-map-gl/maplibre';
 import type { Feature, Geometry } from 'geojson';
 import { INITIAL_VIEW_STATE, JOINVILLE_NETWORK, MAP_STYLE } from '../data/joinvilleNetwork';
+import { JOINVILLE_ROADS } from '../data/roads';
 import {
   CONGESTION_COLORS,
   type StreetFeature,
@@ -67,6 +68,19 @@ export function MapView() {
   );
 
   const layers = [
+    // Full Joinville road network as a neutral base layer, under the simulated streets.
+    new PathLayer<[number, number][]>({
+      id: 'road-network-base',
+      data: JOINVILLE_ROADS,
+      getPath: (d) => d,
+      getColor: [124, 156, 201, 165],
+      getWidth: 1.2,
+      widthUnits: 'pixels',
+      widthMinPixels: 0.7,
+      capRounded: true,
+      jointRounded: true,
+      pickable: false,
+    }),
     new GeoJsonLayer<StreetFeatureProperties>({
       id: 'road-network',
       data: geojson,

@@ -29,3 +29,4 @@ Thumbs.db
 # Playwright MCP artifacts
 .playwright-mcp/
 joinville-map-verify.jpeg
+joinville-*.jpeg

@@ -71,11 +71,11 @@ export const JOINVILLE_NETWORK: StreetFeatureCollection = {
   ],
 };
 
-/** Initial camera framing the real network. */
+/** Initial camera framing the city network, with the simulated streets still prominent. */
 export const INITIAL_VIEW_STATE = {
-  longitude: -48.85,
-  latitude: -26.2855,
-  zoom: 13.1,
+  longitude: -48.846,
+  latitude: -26.287,
+  zoom: 12.6,
   pitch: 0,
   bearing: 0,
 };
