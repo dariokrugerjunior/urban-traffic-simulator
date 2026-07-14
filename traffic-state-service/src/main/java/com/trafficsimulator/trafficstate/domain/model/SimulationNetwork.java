@@ -26,10 +26,54 @@ public class SimulationNetwork {
         boolean isNew = !streets.containsKey(street.id());
         streets.put(street.id(), street);
         if (isNew) {
-            enterableFrom.computeIfAbsent(street.fromIntersectionId(), k -> new ArrayList<>()).add(street);
-            if (!street.oneway()) {
-                enterableFrom.computeIfAbsent(street.toIntersectionId(), k -> new ArrayList<>()).add(street);
-            }
+            index(street);
+        }
+    }
+
+    /** Adds a single street's entries to the adjacency index (respecting direction and closure). */
+    private void index(Street street) {
+        if (street.blocked()) {
+            return; // a closed street is not enterable from any node
+        }
+        enterableFrom.computeIfAbsent(street.fromIntersectionId(), k -> new ArrayList<>()).add(street);
+        if (!street.oneway()) {
+            enterableFrom.computeIfAbsent(street.toIntersectionId(), k -> new ArrayList<>()).add(street);
+        }
+    }
+
+    /** Recomputes the whole adjacency index from the current streets' flags (after a topology edit). */
+    private void rebuildAdjacency() {
+        enterableFrom.clear();
+        for (Street s : streets.values()) {
+            index(s);
+        }
+    }
+
+    /** Flips a street between one-way and two-way, then re-indexes. No-op if the id is unknown. */
+    public void setOneway(String id, boolean oneway) {
+        Street s = streets.get(id);
+        if (s == null || s.oneway() == oneway) {
+            return;
+        }
+        s.setOneway(oneway);
+        rebuildAdjacency();
+    }
+
+    /** Closes or reopens a street, then re-indexes. No-op if the id is unknown. */
+    public void setBlocked(String id, boolean blocked) {
+        Street s = streets.get(id);
+        if (s == null || s.blocked() == blocked) {
+            return;
+        }
+        s.setBlocked(blocked);
+        rebuildAdjacency();
+    }
+
+    /** Marks or unmarks a street as a traffic source. No-op if the id is unknown. */
+    public void setSource(String id, boolean source) {
+        Street s = streets.get(id);
+        if (s != null) {
+            s.setSource(source);
         }
     }
 

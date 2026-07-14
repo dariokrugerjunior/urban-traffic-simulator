@@ -31,6 +31,7 @@ public final class Street {
     private double greenRatio = 1.0;
     private boolean oneway;
     private boolean source;
+    private boolean blocked;
 
     /**
      * Creates a street with an initial volume.
@@ -146,6 +147,15 @@ public final class Street {
 
     public void setSource(boolean source) {
         this.source = source;
+    }
+
+    /** Whether the street is closed: no traffic may enter it (it drains and stays empty). */
+    public boolean blocked() {
+        return blocked;
+    }
+
+    public void setBlocked(boolean blocked) {
+        this.blocked = blocked;
     }
 
     /**
