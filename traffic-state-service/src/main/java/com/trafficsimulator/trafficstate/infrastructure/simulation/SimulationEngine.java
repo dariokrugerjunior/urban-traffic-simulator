@@ -1,5 +1,6 @@
 package com.trafficsimulator.trafficstate.infrastructure.simulation;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.trafficsimulator.trafficstate.domain.model.SimulationNetwork;
 import com.trafficsimulator.trafficstate.domain.model.Street;
@@ -11,8 +12,10 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.UncheckedIOException;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 /**
@@ -35,16 +38,23 @@ public class SimulationEngine {
     private final int sourceRate;
 
     private final int sourceCount;
+    private final double signalGreenRatio;
+
+    /** Through-road classes that feed traffic into the city (candidate sources). */
+    private static final Set<String> SOURCE_CLASSES = Set.of(
+            "motorway", "motorway_link", "trunk", "trunk_link", "primary", "primary_link");
 
     public SimulationEngine(
             @Value("${simulation.out-rate:0.18}") double outRate,
             @Value("${simulation.decay:0.02}") double decay,
             @Value("${simulation.source-rate:900}") int sourceRate,
-            @Value("${simulation.source-count:14}") int sourceCount) {
+            @Value("${simulation.source-count:14}") int sourceCount,
+            @Value("${simulation.signal-green-ratio:0.6}") double signalGreenRatio) {
         this.outRate = outRate;
         this.decay = decay;
         this.sourceRate = sourceRate;
         this.sourceCount = sourceCount;
+        this.signalGreenRatio = signalGreenRatio;
     }
 
     @PostConstruct
@@ -56,28 +66,50 @@ public class SimulationEngine {
         add(new Street("st-nove-de-marco", "Rua Nove de Marco", "I1", "I2", 900));
         add(new Street("st-xv-de-novembro", "Rua XV de Novembro", "I2", "I3", 1000));
 
-        // Real central-Joinville graph.
+        // Real central-Joinville graph (capacity already derived from the OSM road class).
+        Map<String, String> classById = new HashMap<>();
         for (Edge e : readEdges("/city-network.json")) {
             String name = (e.name() == null || e.name().isBlank()) ? "Rua sem nome" : e.name();
             Street s = new Street(e.id(), name, e.nodeA(), e.nodeB(), e.capacity());
             s.setOneway(e.oneway());
+            classById.put(e.id(), e.roadClass());
             add(s);
         }
 
-        seedDefaultSources();
+        seedDefaultSources(classById);
+        applyTrafficSignals();
     }
 
     private void add(Street s) {
         network.addStreet(s);
     }
 
-    /** Mark a few high-capacity inbound streets as sources so the city is alive on boot. */
-    private void seedDefaultSources() {
-        List<Street> byCapacity = new ArrayList<>(network.streets());
-        byCapacity.sort((a, b) -> Integer.compare(b.hourlyCapacity(), a.hourlyCapacity()));
-        int sources = Math.min(sourceCount, byCapacity.size());
+    /**
+     * Seeds sources from the highest-capacity <em>through-roads</em> (motorways/arterials): those
+     * are where traffic enters the city, so residential streets never spontaneously generate flow.
+     */
+    private void seedDefaultSources(Map<String, String> classById) {
+        List<Street> candidates = new ArrayList<>();
+        for (Street s : network.streets()) {
+            String cls = classById.get(s.id());
+            if (cls != null && SOURCE_CLASSES.contains(cls)) {
+                candidates.add(s);
+            }
+        }
+        candidates.sort((a, b) -> Integer.compare(b.hourlyCapacity(), a.hourlyCapacity()));
+        int sources = Math.min(sourceCount, candidates.size());
         for (int i = 0; i < sources; i++) {
-            byCapacity.get(i).setSource(true);
+            candidates.get(i).setSource(true);
+        }
+    }
+
+    /** Real OSM traffic signals: streets arriving at a signalised node lose throughput. */
+    private void applyTrafficSignals() {
+        Set<String> signalNodes = Set.of(readStrings("/traffic-signals.json"));
+        for (Street s : network.streets()) {
+            if (signalNodes.contains(s.toIntersectionId())) {
+                s.addTrafficLight(signalGreenRatio);
+            }
         }
     }
 
@@ -87,6 +119,17 @@ public class SimulationEngine {
                 return new Edge[0];
             }
             return new ObjectMapper().readValue(in, Edge[].class);
+        } catch (IOException e) {
+            throw new UncheckedIOException("Failed to load " + resource, e);
+        }
+    }
+
+    private String[] readStrings(String resource) {
+        try (InputStream in = getClass().getResourceAsStream(resource)) {
+            if (in == null) {
+                return new String[0];
+            }
+            return new ObjectMapper().readValue(in, String[].class);
         } catch (IOException e) {
             throw new UncheckedIOException("Failed to load " + resource, e);
         }
@@ -134,5 +177,6 @@ public class SimulationEngine {
         return result;
     }
 
-    private record Edge(String id, String name, int capacity, String nodeA, String nodeB, boolean oneway) { }
+    private record Edge(String id, String name, int capacity, String nodeA, String nodeB,
+                        boolean oneway, @JsonProperty("class") String roadClass) { }
 }
