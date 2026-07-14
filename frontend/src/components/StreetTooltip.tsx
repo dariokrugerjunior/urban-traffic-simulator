@@ -1,5 +1,6 @@
+import { useTranslation } from 'react-i18next';
 import { useTrafficStore } from '../store/trafficStore';
-import { CONGESTION_HEX, CONGESTION_LABEL } from '../types/traffic';
+import { CONGESTION_HEX } from '../types/traffic';
 
 export interface HoverInfo {
   id: string;
@@ -10,6 +11,7 @@ export interface HoverInfo {
 
 /** Custom floating tooltip following the cursor while hovering a street. */
 export function StreetTooltip({ hover }: { hover: HoverInfo }) {
+  const { t } = useTranslation();
   const state = useTrafficStore((s) => s.streets[hover.id]);
   const level = state?.congestionLevel ?? 'FREE';
 
@@ -25,10 +27,10 @@ export function StreetTooltip({ hover }: { hover: HoverInfo }) {
             className="h-2.5 w-2.5 rounded-full"
             style={{ backgroundColor: CONGESTION_HEX[level], boxShadow: `0 0 8px ${CONGESTION_HEX[level]}` }}
           />
-          <span className="text-xs font-medium text-neutral-300">{CONGESTION_LABEL[level]}</span>
+          <span className="text-xs font-medium text-neutral-300">{t(`congestion.${level}`)}</span>
           {state && (
             <span className="text-xs text-neutral-500">
-              {state.currentVolume}/{state.effectiveCapacity} veh/h
+              {t('tooltip.metrics', { volume: state.currentVolume, capacity: state.effectiveCapacity })}
             </span>
           )}
         </div>

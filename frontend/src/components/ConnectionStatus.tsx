@@ -1,15 +1,18 @@
+import { useTranslation } from 'react-i18next';
 import { useTrafficStore } from '../store/trafficStore';
 
 const CONFIG = {
-  connecting: { label: 'Connecting', color: '#eab308' },
-  live: { label: 'Live', color: '#22c55e' },
-  offline: { label: 'Offline', color: '#ef4444' },
+  connecting: { key: 'status.connecting', color: '#eab308' },
+  live: { key: 'status.live', color: '#22c55e' },
+  offline: { key: 'status.offline', color: '#ef4444' },
 } as const;
 
 /** Shows the SSE connection status with a pulsing indicator. */
 export function ConnectionStatus() {
+  const { t } = useTranslation();
   const status = useTrafficStore((s) => s.status);
-  const { label, color } = CONFIG[status];
+  const { key, color } = CONFIG[status];
+  const label = t(key);
 
   return (
     <div className="flex items-center gap-2 rounded-full border border-white/10 bg-neutral-900/80 px-3 py-1.5 shadow-lg shadow-black/40 backdrop-blur-md">

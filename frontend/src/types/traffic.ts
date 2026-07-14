@@ -36,9 +36,3 @@ export const CONGESTION_HEX: Record<CongestionLevel, string> = {
   HEAVY: '#eab308',
   JAMMED: '#ef4444',
 };
-
-export const CONGESTION_LABEL: Record<CongestionLevel, string> = {
-  FREE: 'Free flow',
-  HEAVY: 'Heavy',
-  JAMMED: 'Jammed',
-};

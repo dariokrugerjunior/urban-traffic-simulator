@@ -1,10 +1,12 @@
 import { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { useTrafficStore } from '../store/trafficStore';
 import { addTrafficLight, injectFlow } from '../services/apiService';
-import { CONGESTION_HEX, CONGESTION_LABEL } from '../types/traffic';
+import { CONGESTION_HEX } from '../types/traffic';
 
 /** Action panel for the selected street. Sends commands and waits for the SSE update. */
 export function StreetActionPanel() {
+  const { t } = useTranslation();
   const selectedId = useTrafficStore((s) => s.selectedStreetId);
   const street = useTrafficStore((s) => (selectedId ? s.streets[selectedId] : undefined));
   const close = useTrafficStore((s) => s.selectStreet);
@@ -25,7 +27,7 @@ export function StreetActionPanel() {
     try {
       await action();
     } catch {
-      setError('Command failed — is the backend running on :8081?');
+      setError(t('panel.error'));
     } finally {
       setPending(false);
     }
@@ -35,13 +37,13 @@ export function StreetActionPanel() {
     <div className="w-80 rounded-2xl border border-white/10 bg-neutral-900/85 p-5 shadow-2xl shadow-black/60 backdrop-blur-xl">
       <div className="flex items-start justify-between gap-3">
         <div>
-          <p className="text-[11px] font-semibold uppercase tracking-widest text-neutral-500">Street</p>
+          <p className="text-[11px] font-semibold uppercase tracking-widest text-neutral-500">{t('panel.street')}</p>
           <h2 className="mt-0.5 text-base font-semibold leading-tight text-white">{name}</h2>
         </div>
         <button
           onClick={() => close(null)}
           className="rounded-lg p-1 text-neutral-500 transition hover:bg-white/5 hover:text-white"
-          aria-label="Close"
+          aria-label={t('panel.close')}
         >
           <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
             <path d="M18 6 6 18M6 6l12 12" strokeLinecap="round" />
@@ -54,10 +56,14 @@ export function StreetActionPanel() {
           className="h-3 w-3 rounded-full"
           style={{ backgroundColor: CONGESTION_HEX[level], boxShadow: `0 0 10px ${CONGESTION_HEX[level]}` }}
         />
-        <span className="text-sm font-medium text-white">{CONGESTION_LABEL[level]}</span>
+        <span className="text-sm font-medium text-white">{t(`congestion.${level}`)}</span>
         {street && (
           <span className="ml-auto text-xs text-neutral-400">
-            {street.currentVolume}/{street.effectiveCapacity} veh/h · {(street.ratio * 100).toFixed(0)}%
+            {t('panel.metrics', {
+              volume: street.currentVolume,
+              capacity: street.effectiveCapacity,
+              percent: (street.ratio * 100).toFixed(0),
+            })}
           </span>
         )}
       </div>
@@ -68,7 +74,7 @@ export function StreetActionPanel() {
           onClick={() => run(() => addTrafficLight(selectedId, 0.5))}
           className="flex items-center justify-center gap-2 rounded-xl bg-amber-500/90 px-4 py-2.5 text-sm font-semibold text-neutral-950 transition hover:bg-amber-400 disabled:opacity-50"
         >
-          <span className="text-base leading-none">🚦</span> Add Traffic Light
+          <span className="text-base leading-none">🚦</span> {t('panel.addTrafficLight')}
         </button>
 
         <div className="grid grid-cols-2 gap-2">
@@ -77,21 +83,19 @@ export function StreetActionPanel() {
             onClick={() => run(() => injectFlow(selectedId, 500))}
             className="rounded-xl border border-white/10 bg-white/5 px-3 py-2.5 text-sm font-medium text-neutral-200 transition hover:bg-white/10 disabled:opacity-50"
           >
-            + 500 veh
+            {t('panel.injectVehicles', { n: 500 })}
           </button>
           <button
             disabled={pending}
             onClick={() => run(() => injectFlow(selectedId, 1500))}
             className="rounded-xl border border-white/10 bg-white/5 px-3 py-2.5 text-sm font-medium text-neutral-200 transition hover:bg-white/10 disabled:opacity-50"
           >
-            + 1500 veh
+            {t('panel.injectVehicles', { n: 1500 })}
           </button>
         </div>
       </div>
 
-      <p className="mt-4 text-[11px] leading-relaxed text-neutral-500">
-        Commands are published to Kafka. The map recolors when the backend pushes the new state over SSE.
-      </p>
+      <p className="mt-4 text-[11px] leading-relaxed text-neutral-500">{t('panel.hint')}</p>
       {error && <p className="mt-2 text-xs font-medium text-red-400">{error}</p>}
     </div>
   );
