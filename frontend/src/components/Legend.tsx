@@ -1,5 +1,5 @@
 import { useTranslation } from 'react-i18next';
-import { CONGESTION_HEX, type CongestionLevel } from '../types/traffic';
+import { BLOCKED_HEX, CONGESTION_HEX, type CongestionLevel } from '../types/traffic';
 
 const LEVELS: CongestionLevel[] = ['FREE', 'HEAVY', 'JAMMED'];
 
@@ -22,6 +22,13 @@ export function Legend() {
             <span className="text-xs font-medium text-neutral-300">{t(`congestion.${level}`)}</span>
           </div>
         ))}
+        <div className="flex items-center gap-2.5">
+          <span
+            className="h-2.5 w-6 rounded-full"
+            style={{ backgroundColor: BLOCKED_HEX }}
+          />
+          <span className="text-xs font-medium text-neutral-300">{t('legend.blocked')}</span>
+        </div>
       </div>
     </div>
   );

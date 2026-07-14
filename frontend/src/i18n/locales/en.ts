@@ -10,6 +10,7 @@ export const en = {
   },
   legend: {
     title: 'Congestion',
+    blocked: 'Closed',
   },
   congestion: {
     FREE: 'Free flow',
@@ -24,6 +25,13 @@ export const en = {
     addFlow: 'Add traffic',
     removeFlow: 'Remove traffic',
     metrics: '{{volume}}/{{capacity}} veh/h · {{percent}}%',
+    topology: 'Topology',
+    makeOneWay: 'Make one-way',
+    makeTwoWay: 'Make two-way',
+    blockStreet: 'Close street',
+    reopenStreet: 'Reopen street',
+    markSource: 'Mark as source',
+    unmarkSource: 'Remove source',
     hint: 'Commands are published to Kafka. The map recolors when the backend pushes the new state over SSE.',
     error: 'Command failed — is the backend running on :8081?',
     close: 'Close',

@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useTrafficStore } from '../store/trafficStore';
-import { addTrafficLight, injectFlow, releaseFlow } from '../services/apiService';
+import { addTrafficLight, injectFlow, releaseFlow, setTopology } from '../services/apiService';
 import { CONGESTION_HEX } from '../types/traffic';
 
 /** Action panel for the selected street. Sends commands and waits for the SSE update. */
@@ -20,6 +20,9 @@ export function StreetActionPanel() {
 
   const level = street?.congestionLevel ?? 'FREE';
   const name = street?.name ?? selectedId;
+  const oneway = street?.oneway ?? false;
+  const blocked = street?.blocked ?? false;
+  const isSource = street?.source ?? false;
 
   async function run(action: () => Promise<void>) {
     setPending(true);
@@ -119,6 +122,42 @@ export function StreetActionPanel() {
               {t('panel.releaseVehicles', { n: 1500 })}
             </button>
           </div>
+        </div>
+      </div>
+
+      <div className="mt-5 border-t border-white/5 pt-4">
+        <p className="mb-1.5 text-[11px] font-semibold uppercase tracking-widest text-neutral-500">
+          {t('panel.topology')}
+        </p>
+        <div className="flex flex-col gap-2">
+          <button
+            disabled={pending}
+            onClick={() => run(() => setTopology(selectedId, { oneway: !oneway }))}
+            className="flex items-center justify-between rounded-xl border border-white/10 bg-white/5 px-3 py-2.5 text-sm font-medium text-neutral-200 transition hover:bg-white/10 disabled:opacity-50"
+          >
+            <span>{oneway ? t('panel.makeTwoWay') : t('panel.makeOneWay')}</span>
+            <span className="text-xs text-neutral-500">{oneway ? '→' : '↔'}</span>
+          </button>
+          <button
+            disabled={pending}
+            onClick={() => run(() => setTopology(selectedId, { blocked: !blocked }))}
+            className={`flex items-center justify-between rounded-xl border px-3 py-2.5 text-sm font-semibold transition disabled:opacity-50 ${
+              blocked
+                ? 'border-emerald-500/30 bg-emerald-500/15 text-emerald-300 hover:bg-emerald-500/25'
+                : 'border-red-500/30 bg-red-500/15 text-red-300 hover:bg-red-500/25'
+            }`}
+          >
+            <span>{blocked ? t('panel.reopenStreet') : t('panel.blockStreet')}</span>
+            <span className="text-base leading-none">{blocked ? '🔓' : '⛔'}</span>
+          </button>
+          <button
+            disabled={pending}
+            onClick={() => run(() => setTopology(selectedId, { source: !isSource }))}
+            className="flex items-center justify-between rounded-xl border border-white/10 bg-white/5 px-3 py-2.5 text-sm font-medium text-neutral-200 transition hover:bg-white/10 disabled:opacity-50"
+          >
+            <span>{isSource ? t('panel.unmarkSource') : t('panel.markSource')}</span>
+            <span className="text-base leading-none">{isSource ? '🚏' : '➕'}</span>
+          </button>
         </div>
       </div>
 

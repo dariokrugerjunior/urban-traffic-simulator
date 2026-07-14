@@ -10,6 +10,7 @@ export const pt = {
   },
   legend: {
     title: 'Congestionamento',
+    blocked: 'Fechada',
   },
   congestion: {
     FREE: 'Fluxo livre',
@@ -24,6 +25,13 @@ export const pt = {
     addFlow: 'Adicionar tráfego',
     removeFlow: 'Remover tráfego',
     metrics: '{{volume}}/{{capacity}} veíc/h · {{percent}}%',
+    topology: 'Topologia',
+    makeOneWay: 'Tornar mão única',
+    makeTwoWay: 'Tornar mão dupla',
+    blockStreet: 'Fechar via',
+    reopenStreet: 'Reabrir via',
+    markSource: 'Marcar como fonte',
+    unmarkSource: 'Remover fonte',
     hint: 'Os comandos são publicados no Kafka. O mapa recolore quando o backend envia o novo estado via SSE.',
     error: 'Falha no comando — o backend está rodando na :8081?',
     close: 'Fechar',

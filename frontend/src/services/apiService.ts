@@ -5,15 +5,31 @@ import { TRAFFIC_API } from '../config';
 
 const BASE_URL = TRAFFIC_API;
 
-async function postCommand(path: string, body: unknown): Promise<void> {
+async function sendCommand(method: 'POST' | 'PATCH', path: string, body: unknown): Promise<void> {
   const response = await fetch(`${BASE_URL}${path}`, {
-    method: 'POST',
+    method,
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(body),
   });
   if (!response.ok) {
     throw new Error(`Request failed (${response.status}): ${path}`);
   }
+}
+
+function postCommand(path: string, body: unknown): Promise<void> {
+  return sendCommand('POST', path, body);
+}
+
+/** A partial topology edit — only the given fields are changed. */
+export interface TopologyPatch {
+  oneway?: boolean;
+  blocked?: boolean;
+  source?: boolean;
+}
+
+/** Edits a street's topology (one-way/two-way, closed/open, source on/off). */
+export function setTopology(streetId: string, patch: TopologyPatch): Promise<void> {
+  return sendCommand('PATCH', `/streets/${streetId}/topology`, patch);
 }
 
 /** Adds a traffic light to a street (reduces its effective capacity). */

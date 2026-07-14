@@ -10,6 +10,9 @@ const jammed: StreetStateView = {
   ratio: 1,
   congestionLevel: 'JAMMED',
   color: 'Red',
+  oneway: false,
+  blocked: false,
+  source: false,
 };
 
 describe('trafficStore', () => {

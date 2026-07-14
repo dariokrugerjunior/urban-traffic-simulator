@@ -14,6 +14,7 @@ import {
 import { fetchRoadNetwork, type RoadPath } from '../services/roadNetworkService';
 import { fetchCityNetwork, type SimStreet } from '../services/cityNetworkService';
 import {
+  BLOCKED_COLOR,
   CONGESTION_COLORS,
   type StreetFeature,
   type StreetFeatureCollection,
@@ -64,6 +65,7 @@ export function MapView() {
       properties: {
         ...feature.properties,
         congestionLevel: streets[feature.properties.id]?.congestionLevel ?? 'FREE',
+        blocked: streets[feature.properties.id]?.blocked ?? false,
       },
     }));
     const edges: StreetFeature[] = cityEdges.map((edge) => ({
@@ -72,6 +74,7 @@ export function MapView() {
         id: edge.id,
         name: edge.name,
         congestionLevel: streets[edge.id]?.congestionLevel ?? 'FREE',
+        blocked: streets[edge.id]?.blocked ?? false,
         kind: 'local',
       },
       geometry: { type: 'LineString', coordinates: edge.coords },
@@ -79,7 +82,9 @@ export function MapView() {
     return { type: 'FeatureCollection', features: [...corridor, ...edges] };
   }, [streets, cityEdges]);
 
-  const colorKey = geojson.features.map((f) => f.properties.congestionLevel).join('|');
+  const colorKey = geojson.features
+    .map((f) => (f.properties.blocked ? 'X' : f.properties.congestionLevel))
+    .join('|');
 
   const onHover = useCallback((info: PickingInfo<StreetFeature>) => {
     if (info.object) {
@@ -145,7 +150,7 @@ export function MapView() {
       lineCapRounded: true,
       lineJointRounded: true,
       getLineColor: (f: Feature<Geometry, StreetFeatureProperties>) =>
-        CONGESTION_COLORS[f.properties.congestionLevel],
+        f.properties.blocked ? BLOCKED_COLOR : CONGESTION_COLORS[f.properties.congestionLevel],
       updateTriggers: { getLineColor: colorKey },
     }),
   ];

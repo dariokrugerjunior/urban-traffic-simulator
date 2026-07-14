@@ -11,6 +11,10 @@ export interface StreetStateView {
   ratio: number;
   congestionLevel: CongestionLevel;
   color: string;
+  /** Topology flags (Phase 3). */
+  oneway: boolean;
+  blocked: boolean;
+  source: boolean;
 }
 
 /** Static properties carried by each street feature in the local GeoJSON. */
@@ -20,6 +24,8 @@ export interface StreetFeatureProperties {
   congestionLevel: CongestionLevel;
   /** 'local' = neighborhood street (drawn thinner); undefined = arterial/core (thicker). */
   kind?: 'local';
+  /** Closed street — drawn grey regardless of congestion. */
+  blocked?: boolean;
 }
 
 export type StreetFeature = GeoJSON.Feature<GeoJSON.LineString, StreetFeatureProperties>;
@@ -38,3 +44,7 @@ export const CONGESTION_HEX: Record<CongestionLevel, string> = {
   HEAVY: '#eab308',
   JAMMED: '#ef4444',
 };
+
+/** A closed street is drawn muted grey (map RGBA + UI hex), overriding its congestion color. */
+export const BLOCKED_COLOR: [number, number, number, number] = [113, 113, 122, 220];
+export const BLOCKED_HEX = '#71717a';
