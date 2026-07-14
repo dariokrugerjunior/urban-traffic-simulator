@@ -3,9 +3,11 @@ package com.trafficsimulator.trafficstate.infrastructure.web;
 import com.trafficsimulator.trafficstate.application.GetTrafficSnapshotUseCase;
 import com.trafficsimulator.trafficstate.infrastructure.config.KafkaTopicsConfig;
 import com.trafficsimulator.trafficstate.infrastructure.messaging.event.FlowInjectedEvent;
+import com.trafficsimulator.trafficstate.infrastructure.messaging.event.FlowReleasedEvent;
 import com.trafficsimulator.trafficstate.infrastructure.messaging.event.TrafficLightAddedEvent;
 import com.trafficsimulator.trafficstate.infrastructure.web.dto.AddTrafficLightRequest;
 import com.trafficsimulator.trafficstate.infrastructure.web.dto.InjectFlowRequest;
+import com.trafficsimulator.trafficstate.infrastructure.web.dto.ReleaseFlowRequest;
 import com.trafficsimulator.trafficstate.infrastructure.web.dto.StreetStateView;
 import org.springframework.http.ResponseEntity;
 import org.springframework.kafka.core.KafkaTemplate;
@@ -35,6 +37,13 @@ public class TrafficCommandController {
     public ResponseEntity<Void> injectFlow(@PathVariable String id, @RequestBody InjectFlowRequest request) {
         kafkaTemplate.send(KafkaTopicsConfig.FLOW_INJECTED, id,
                 new FlowInjectedEvent(id, request.vehicles(), Instant.now()));
+        return ResponseEntity.accepted().build();
+    }
+
+    @PostMapping("/streets/{id}/release")
+    public ResponseEntity<Void> releaseFlow(@PathVariable String id, @RequestBody ReleaseFlowRequest request) {
+        kafkaTemplate.send(KafkaTopicsConfig.FLOW_RELEASED, id,
+                new FlowReleasedEvent(id, request.vehicles(), Instant.now()));
         return ResponseEntity.accepted().build();
     }
 

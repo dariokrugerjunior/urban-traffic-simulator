@@ -8,12 +8,19 @@ import org.springframework.kafka.config.TopicBuilder;
 @Configuration
 public class KafkaTopicsConfig {
     public static final String FLOW_INJECTED = "flow-injected";
+    public static final String FLOW_RELEASED = "flow-released";
     public static final String TRAFFIC_LIGHT_ADDED = "traffic-light-added";
     public static final String STREET_CONGESTED = "street-congested";
+    public static final String STREET_CLEARED = "street-cleared";
 
     @Bean
     NewTopic flowInjectedTopic() {
         return TopicBuilder.name(FLOW_INJECTED).partitions(1).replicas(1).build();
+    }
+
+    @Bean
+    NewTopic flowReleasedTopic() {
+        return TopicBuilder.name(FLOW_RELEASED).partitions(1).replicas(1).build();
     }
 
     @Bean
@@ -24,5 +31,10 @@ public class KafkaTopicsConfig {
     @Bean
     NewTopic streetCongestedTopic() {
         return TopicBuilder.name(STREET_CONGESTED).partitions(1).replicas(1).build();
+    }
+
+    @Bean
+    NewTopic streetClearedTopic() {
+        return TopicBuilder.name(STREET_CLEARED).partitions(1).replicas(1).build();
     }
 }

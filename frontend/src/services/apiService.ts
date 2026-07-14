@@ -25,6 +25,11 @@ export function injectFlow(streetId: string, vehicles: number): Promise<void> {
   return postCommand(`/streets/${streetId}/flow`, { vehicles });
 }
 
+/** Removes vehicles from a street (drains traffic). */
+export function releaseFlow(streetId: string, vehicles: number): Promise<void> {
+  return postCommand(`/streets/${streetId}/release`, { vehicles });
+}
+
 /** Fetches the current state of every street (used as the initial snapshot). */
 export async function fetchStreets(): Promise<StreetStateView[]> {
   const response = await fetch(`${BASE_URL}/streets`);

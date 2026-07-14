@@ -1,5 +1,6 @@
 package com.trafficsimulator.routing.infrastructure.config;
 
+import com.trafficsimulator.routing.application.ClearStreetUseCase;
 import com.trafficsimulator.routing.application.FindRouteUseCase;
 import com.trafficsimulator.routing.application.GetNetworkStateUseCase;
 import com.trafficsimulator.routing.application.PenalizeStreetUseCase;
@@ -46,6 +47,11 @@ public class RoutingBeansConfig {
     @Bean
     PenalizeStreetUseCase penalizeStreetUseCase(RoadNetwork n) {
         return new PenalizeStreetUseCase(n);
+    }
+
+    @Bean
+    ClearStreetUseCase clearStreetUseCase(RoadNetwork n) {
+        return new ClearStreetUseCase(n);
     }
 
     @Bean

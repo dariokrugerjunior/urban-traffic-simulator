@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useTrafficStore } from '../store/trafficStore';
-import { addTrafficLight, injectFlow } from '../services/apiService';
+import { addTrafficLight, injectFlow, releaseFlow } from '../services/apiService';
 import { CONGESTION_HEX } from '../types/traffic';
 
 /** Action panel for the selected street. Sends commands and waits for the SSE update. */
@@ -77,21 +77,48 @@ export function StreetActionPanel() {
           <span className="text-base leading-none">🚦</span> {t('panel.addTrafficLight')}
         </button>
 
-        <div className="grid grid-cols-2 gap-2">
-          <button
-            disabled={pending}
-            onClick={() => run(() => injectFlow(selectedId, 500))}
-            className="rounded-xl border border-white/10 bg-white/5 px-3 py-2.5 text-sm font-medium text-neutral-200 transition hover:bg-white/10 disabled:opacity-50"
-          >
-            {t('panel.injectVehicles', { n: 500 })}
-          </button>
-          <button
-            disabled={pending}
-            onClick={() => run(() => injectFlow(selectedId, 1500))}
-            className="rounded-xl border border-white/10 bg-white/5 px-3 py-2.5 text-sm font-medium text-neutral-200 transition hover:bg-white/10 disabled:opacity-50"
-          >
-            {t('panel.injectVehicles', { n: 1500 })}
-          </button>
+        <div>
+          <p className="mb-1.5 text-[11px] font-semibold uppercase tracking-widest text-neutral-500">
+            {t('panel.addFlow')}
+          </p>
+          <div className="grid grid-cols-2 gap-2">
+            <button
+              disabled={pending}
+              onClick={() => run(() => injectFlow(selectedId, 500))}
+              className="rounded-xl border border-white/10 bg-white/5 px-3 py-2.5 text-sm font-medium text-neutral-200 transition hover:bg-white/10 disabled:opacity-50"
+            >
+              {t('panel.injectVehicles', { n: 500 })}
+            </button>
+            <button
+              disabled={pending}
+              onClick={() => run(() => injectFlow(selectedId, 1500))}
+              className="rounded-xl border border-white/10 bg-white/5 px-3 py-2.5 text-sm font-medium text-neutral-200 transition hover:bg-white/10 disabled:opacity-50"
+            >
+              {t('panel.injectVehicles', { n: 1500 })}
+            </button>
+          </div>
+        </div>
+
+        <div>
+          <p className="mb-1.5 text-[11px] font-semibold uppercase tracking-widest text-neutral-500">
+            {t('panel.removeFlow')}
+          </p>
+          <div className="grid grid-cols-2 gap-2">
+            <button
+              disabled={pending}
+              onClick={() => run(() => releaseFlow(selectedId, 500))}
+              className="rounded-xl border border-white/10 bg-white/5 px-3 py-2.5 text-sm font-medium text-neutral-200 transition hover:bg-white/10 disabled:opacity-50"
+            >
+              {t('panel.releaseVehicles', { n: 500 })}
+            </button>
+            <button
+              disabled={pending}
+              onClick={() => run(() => releaseFlow(selectedId, 1500))}
+              className="rounded-xl border border-white/10 bg-white/5 px-3 py-2.5 text-sm font-medium text-neutral-200 transition hover:bg-white/10 disabled:opacity-50"
+            >
+              {t('panel.releaseVehicles', { n: 1500 })}
+            </button>
+          </div>
         </div>
       </div>
 
