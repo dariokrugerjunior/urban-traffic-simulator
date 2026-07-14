@@ -1,52 +1,42 @@
 import type { StreetFeatureCollection } from '../types/traffic';
 
-// Multi-point traces (lng, lat) approximating the real path of each Joinville street,
-// so the rendered lines curve with the road instead of cutting straight across blocks.
-// Shared endpoints keep the network connected at the intersections
-// I1=Centro, I2=Estacao, I3=America, I5=Saguacu.
+// Real street geometry from OpenStreetMap (same source as the CARTO basemap), so each
+// colored line traces the actual road. Coordinates are [lng, lat], simplified
+// (Douglas-Peucker) to keep the payload small while following the real path.
+// Street ids match the backend seed.
 
 const BEIRA_RIO: [number, number][] = [
-  [-48.846, -26.304],
-  [-48.8452, -26.3008],
-  [-48.8443, -26.2976],
-  [-48.8428, -26.2948],
-  [-48.841, -26.292],
-  [-48.8394, -26.2899],
-  [-48.838, -26.288],
+  [-48.840905, -26.301732], [-48.841081, -26.301424], [-48.841648, -26.300881],
+  [-48.841893, -26.300002], [-48.842088, -26.295728], [-48.84252, -26.294694],
+  [-48.842566, -26.294057], [-48.84282, -26.285647], [-48.843384, -26.284772],
 ];
 
 const JOAO_COLIN: [number, number][] = [
-  [-48.846, -26.304],
-  [-48.847, -26.3018],
-  [-48.848, -26.2995],
-  [-48.8488, -26.2972],
-  [-48.8494, -26.295],
-  [-48.85, -26.293],
+  [-48.847978, -26.301478], [-48.84766, -26.297427], [-48.847697, -26.296937],
+  [-48.849815, -26.277508],
 ];
 
 const DONA_FRANCISCA: [number, number][] = [
-  [-48.85, -26.293],
-  [-48.8476, -26.2923],
-  [-48.8451, -26.2913],
-  [-48.8426, -26.2901],
-  [-48.8402, -26.289],
-  [-48.838, -26.288],
+  [-48.857868, -26.267893], [-48.854484, -26.26937], [-48.852999, -26.270127],
+  [-48.852452, -26.270524], [-48.850506, -26.272465], [-48.849421, -26.272818],
+  [-48.848895, -26.273261], [-48.848675, -26.274465], [-48.84654, -26.277103],
+  [-48.846295, -26.277243], [-48.846338, -26.277345], [-48.845644, -26.279182],
+  [-48.845126, -26.280155], [-48.843856, -26.281456], [-48.841468, -26.282831],
+  [-48.841375, -26.283213], [-48.840983, -26.283322], [-48.840896, -26.283439],
+  [-48.839844, -26.285745], [-48.839743, -26.286136], [-48.839864, -26.286571],
+  [-48.840412, -26.287076],
 ];
 
 const NOVE_DE_MARCO: [number, number][] = [
-  [-48.846, -26.304],
-  [-48.8478, -26.3036],
-  [-48.8497, -26.3028],
-  [-48.8515, -26.3018],
-  [-48.853, -26.301],
+  [-48.850749, -26.301333], [-48.841078, -26.301836], [-48.840905, -26.301732],
 ];
 
 const XV_DE_NOVEMBRO: [number, number][] = [
-  [-48.853, -26.301],
-  [-48.8524, -26.2987],
-  [-48.8517, -26.2965],
-  [-48.851, -26.2948],
-  [-48.85, -26.293],
+  [-48.842245, -26.300673], [-48.842371, -26.300866], [-48.844088, -26.3008],
+  [-48.844166, -26.30071], [-48.844274, -26.300787], [-48.850683, -26.300431],
+  [-48.851606, -26.299847], [-48.852199, -26.299585], [-48.853073, -26.298923],
+  [-48.85688, -26.298499], [-48.858387, -26.298744], [-48.858704, -26.298653],
+  [-48.859404, -26.298208], [-48.860325, -26.297878],
 ];
 
 /** Static geometry of the road network. Congestion levels are updated live from SSE by id. */
@@ -60,7 +50,7 @@ export const JOINVILLE_NETWORK: StreetFeatureCollection = {
     },
     {
       type: 'Feature',
-      properties: { id: 'st-joao-colin', name: 'Rua Joao Colin', congestionLevel: 'FREE' },
+      properties: { id: 'st-joao-colin', name: 'Rua Doutor Joao Colin', congestionLevel: 'FREE' },
       geometry: { type: 'LineString', coordinates: JOAO_COLIN },
     },
     {
@@ -81,11 +71,11 @@ export const JOINVILLE_NETWORK: StreetFeatureCollection = {
   ],
 };
 
-/** Initial camera framing the seeded network. */
+/** Initial camera framing the real network. */
 export const INITIAL_VIEW_STATE = {
-  longitude: -48.845,
-  latitude: -26.296,
-  zoom: 13.4,
+  longitude: -48.85,
+  latitude: -26.2855,
+  zoom: 13.1,
   pitch: 0,
   bearing: 0,
 };
