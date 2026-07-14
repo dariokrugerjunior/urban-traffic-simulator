@@ -71,6 +71,19 @@ export const JOINVILLE_NETWORK: StreetFeatureCollection = {
   ],
 };
 
+/** Lookup of each simulated street's geometry by id, used to draw the computed route. */
+export const STREET_GEOMETRY_BY_ID: Record<string, [number, number][]> = Object.fromEntries(
+  JOINVILLE_NETWORK.features.map((feature) => [
+    feature.properties.id,
+    feature.geometry.coordinates as [number, number][],
+  ]),
+);
+
+/** Lookup of each simulated street's display name by id. */
+export const STREET_NAME_BY_ID: Record<string, string> = Object.fromEntries(
+  JOINVILLE_NETWORK.features.map((feature) => [feature.properties.id, feature.properties.name]),
+);
+
 /** Initial camera framing the city network, with the simulated streets still prominent. */
 export const INITIAL_VIEW_STATE = {
   longitude: -48.846,

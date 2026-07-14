@@ -28,4 +28,10 @@ export const en = {
   tooltip: {
     metrics: '{{volume}}/{{capacity}} veh/h',
   },
+  route: {
+    title: 'GPS route',
+    cost: 'cost {{cost}}',
+    none: 'No route available',
+    loading: 'Computing route…',
+  },
 } as const;

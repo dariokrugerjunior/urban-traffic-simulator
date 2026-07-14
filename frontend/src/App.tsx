@@ -5,6 +5,7 @@ import { Legend } from './components/Legend';
 import { ConnectionStatus } from './components/ConnectionStatus';
 import { StreetActionPanel } from './components/StreetActionPanel';
 import { LanguageSwitcher } from './components/LanguageSwitcher';
+import { RoutePanel } from './components/RoutePanel';
 import { useTrafficStore } from './store/trafficStore';
 
 export default function App() {
@@ -29,6 +30,11 @@ export default function App() {
           <ConnectionStatus />
         </div>
       </header>
+
+      {/* Live GPS route */}
+      <div className="absolute left-5 top-24 z-10">
+        <RoutePanel />
+      </div>
 
       {/* Legend */}
       <div className="absolute bottom-5 left-5 z-10">

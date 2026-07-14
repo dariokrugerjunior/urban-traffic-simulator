@@ -4,7 +4,12 @@ import { MapboxOverlay, type MapboxOverlayProps } from '@deck.gl/mapbox';
 import type { PickingInfo } from '@deck.gl/core';
 import Map, { useControl, type ErrorEvent } from 'react-map-gl/maplibre';
 import type { Feature, Geometry } from 'geojson';
-import { INITIAL_VIEW_STATE, JOINVILLE_NETWORK, MAP_STYLE } from '../data/joinvilleNetwork';
+import {
+  INITIAL_VIEW_STATE,
+  JOINVILLE_NETWORK,
+  MAP_STYLE,
+  STREET_GEOMETRY_BY_ID,
+} from '../data/joinvilleNetwork';
 import { fetchRoadNetwork, type RoadPath } from '../services/roadNetworkService';
 import {
   CONGESTION_COLORS,
@@ -26,8 +31,15 @@ function DeckGLOverlay(props: MapboxOverlayProps) {
 export function MapView() {
   const streets = useTrafficStore((s) => s.streets);
   const selectStreet = useTrafficStore((s) => s.selectStreet);
+  const route = useTrafficStore((s) => s.route);
   const [hover, setHover] = useState<HoverInfo | null>(null);
   const [roads, setRoads] = useState<RoadPath[]>([]);
+
+  // Geometry of the streets that make up the current computed route.
+  const routePaths = useMemo<RoadPath[]>(
+    () => (route?.streets ?? []).map((id) => STREET_GEOMETRY_BY_ID[id]).filter((p): p is RoadPath => Boolean(p)),
+    [route],
+  );
 
   // Load the full road network once from the static asset in /public.
   useEffect(() => {
@@ -85,6 +97,19 @@ export function MapView() {
       getWidth: 1.2,
       widthUnits: 'pixels',
       widthMinPixels: 0.7,
+      capRounded: true,
+      jointRounded: true,
+      pickable: false,
+    }),
+    // Highlight halo under the streets that form the current GPS route (I1 → I5).
+    new PathLayer<RoadPath>({
+      id: 'route-highlight',
+      data: routePaths,
+      getPath: (d) => d,
+      getColor: [255, 255, 255, 150],
+      getWidth: 12,
+      widthUnits: 'pixels',
+      widthMinPixels: 8,
       capRounded: true,
       jointRounded: true,
       pickable: false,
