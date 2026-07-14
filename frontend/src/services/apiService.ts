@@ -1,8 +1,9 @@
 // The ONLY place REST calls to the backend are made.
 
 import type { StreetStateView } from '../types/traffic';
+import { TRAFFIC_API } from '../config';
 
-const BASE_URL = 'http://localhost:8081/api/traffic';
+const BASE_URL = TRAFFIC_API;
 
 async function postCommand(path: string, body: unknown): Promise<void> {
   const response = await fetch(`${BASE_URL}${path}`, {

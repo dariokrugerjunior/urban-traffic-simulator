@@ -1,6 +1,8 @@
 // The ONLY place the routing-service REST API is fetched.
 
-const BASE_URL = 'http://localhost:8082/api/routes';
+import { ROUTING_API } from '../config';
+
+const BASE_URL = ROUTING_API;
 
 /** Shortest path returned by the routing-service (mirrors its RouteView). */
 export interface RouteView {

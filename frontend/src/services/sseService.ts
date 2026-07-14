@@ -1,8 +1,9 @@
 // The ONLY place the SSE EventSource connection is created.
 
 import type { StreetStateView } from '../types/traffic';
+import { SSE_STREAM } from '../config';
 
-const STREAM_URL = 'http://localhost:8081/api/traffic/stream';
+const STREAM_URL = SSE_STREAM;
 
 export interface SseHandlers {
   onUpdate: (state: StreetStateView) => void;
