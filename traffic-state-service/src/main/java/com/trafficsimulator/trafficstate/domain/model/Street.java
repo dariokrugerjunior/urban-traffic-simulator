@@ -29,6 +29,8 @@ public final class Street {
     private int currentVolume;
     private int trafficLightCount;
     private double greenRatio = 1.0;
+    private boolean oneway;
+    private boolean source;
 
     /**
      * Creates a street with an initial volume.
@@ -126,6 +128,24 @@ public final class Street {
 
     public double greenRatio() {
         return greenRatio;
+    }
+
+    /** Whether the street is one-way (canonical direction: from → to). */
+    public boolean oneway() {
+        return oneway;
+    }
+
+    public void setOneway(boolean oneway) {
+        this.oneway = oneway;
+    }
+
+    /** Whether the street continuously generates traffic (a simulation source). */
+    public boolean source() {
+        return source;
+    }
+
+    public void setSource(boolean source) {
+        this.source = source;
     }
 
     /**
