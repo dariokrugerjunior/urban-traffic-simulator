@@ -34,4 +34,7 @@ export const en = {
     none: 'No route available',
     loading: 'Computing route…',
   },
+  map: {
+    loadingNetwork: 'Loading road network…',
+  },
 } as const;

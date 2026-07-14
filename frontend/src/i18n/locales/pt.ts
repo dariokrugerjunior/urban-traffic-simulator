@@ -34,4 +34,7 @@ export const pt = {
     none: 'Nenhuma rota disponível',
     loading: 'Calculando rota…',
   },
+  map: {
+    loadingNetwork: 'Carregando malha viária…',
+  },
 } as const;

@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { GeoJsonLayer, PathLayer } from '@deck.gl/layers';
 import { MapboxOverlay, type MapboxOverlayProps } from '@deck.gl/mapbox';
 import type { PickingInfo } from '@deck.gl/core';
@@ -32,8 +33,10 @@ export function MapView() {
   const streets = useTrafficStore((s) => s.streets);
   const selectStreet = useTrafficStore((s) => s.selectStreet);
   const route = useTrafficStore((s) => s.route);
+  const { t } = useTranslation();
   const [hover, setHover] = useState<HoverInfo | null>(null);
   const [roads, setRoads] = useState<RoadPath[]>([]);
+  const [networkLoading, setNetworkLoading] = useState(true);
 
   // Geometry of the streets that make up the current computed route.
   const routePaths = useMemo<RoadPath[]>(
@@ -45,7 +48,8 @@ export function MapView() {
   useEffect(() => {
     fetchRoadNetwork()
       .then(setRoads)
-      .catch((error) => console.error('[MAP]', error));
+      .catch((error) => console.error('[MAP]', error))
+      .finally(() => setNetworkLoading(false));
   }, []);
 
   // Merge live congestion levels into the static geometry.
@@ -150,6 +154,14 @@ export function MapView() {
         />
       </Map>
       {hover && <StreetTooltip hover={hover} />}
+      {networkLoading && (
+        <div className="pointer-events-none absolute bottom-5 left-1/2 -translate-x-1/2 rounded-full border border-white/10 bg-neutral-900/80 px-4 py-2 shadow-lg shadow-black/40 backdrop-blur-md">
+          <div className="flex items-center gap-2">
+            <span className="h-3 w-3 animate-spin rounded-full border-2 border-white/20 border-t-white/80" />
+            <span className="text-xs font-medium text-neutral-300">{t('map.loadingNetwork')}</span>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
