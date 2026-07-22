@@ -1,8 +1,8 @@
 spring:
   datasource:
-    url: jdbc:postgresql://postgres:5432/traffic
-    username: traffic
-    password: traffic
+    url: jdbc:postgresql://${DB_HOST:postgres}:${DB_PORT:5432}/${DB_NAME:traffic}
+    username: ${DB_USERNAME:traffic}
+    password: ${DB_PASSWORD:traffic}
     driver-class-name: org.postgresql.Driver
   jpa:
     hibernate:

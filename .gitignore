@@ -26,6 +26,10 @@ Thumbs.db
 # --- Logs ---
 *.log
 
+# --- Secrets (docker compose reads .env; .env.example is the tracked template) ---
+.env
+!.env.example
+
 # Playwright MCP artifacts
 .playwright-mcp/
 joinville-map-verify.jpeg
