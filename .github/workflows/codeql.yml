@@ -1,0 +1,58 @@
+name: CodeQL
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+  schedule:
+    # Segunda-feira, 06:00 UTC — pega CVEs novas em código que não mudou.
+    - cron: '0 6 * * 1'
+
+jobs:
+  analyze:
+    name: Analyze · ${{ matrix.language }}
+    runs-on: ubuntu-latest
+    permissions:
+      security-events: write
+      actions: read
+      contents: read
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - language: java-kotlin
+            build-mode: manual
+          - language: javascript-typescript
+            build-mode: none
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up JDK 21
+        if: matrix.language == 'java-kotlin'
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '21'
+          cache: maven
+
+      - name: Initialize CodeQL
+        uses: github/codeql-action/init@v3
+        with:
+          languages: ${{ matrix.language }}
+          build-mode: ${{ matrix.build-mode }}
+          queries: security-and-quality
+
+      # build-mode manual: os dois serviços são projetos Maven independentes,
+      # então ambos precisam compilar dentro da sessão do CodeQL.
+      - name: Build backend services
+        if: matrix.language == 'java-kotlin'
+        run: |
+          mvn -B -DskipTests package -f traffic-state-service/pom.xml
+          mvn -B -DskipTests package -f routing-service/pom.xml
+
+      - name: Perform CodeQL analysis
+        uses: github/codeql-action/analyze@v3
+        with:
+          category: /language:${{ matrix.language }}
