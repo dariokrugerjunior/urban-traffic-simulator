@@ -38,7 +38,7 @@ export function LandingScreen({ onEnter }: { onEnter: () => void }) {
       <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_50%_45%,rgba(34,197,94,0.10),transparent_55%)]" />
 
       {/* Top bar */}
-      <header className="absolute inset-x-0 top-0 z-20 flex items-center justify-between p-5">
+      <header className="absolute inset-x-0 top-0 z-30 flex items-center justify-between p-5">
         <div className="flex items-center gap-2 rounded-full border border-white/10 bg-white/5 px-3 py-1.5 backdrop-blur-md">
           <span className="relative flex h-2 w-2">
             <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-emerald-400 opacity-75" />

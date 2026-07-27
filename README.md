@@ -12,6 +12,17 @@ one street dynamically **reroutes** a Dijkstra-based GPS engine through Apache K
 
 ## Demo
 
+### Landing
+
+![Landing screen with a rotating street-globe and the city picker](assets/landing.png)
+
+The entry screen renders a rotating globe built from the city's own street geometry. Only
+**Joinville, SC** is active — the other cities are deliberate "coming soon" placeholders. The
+simulator (and its SSE stream) mounts only after you enter, so the landing costs no backend
+connection.
+
+### Live simulation
+
 ![Living traffic simulation and GPS rerouting on the Joinville map](assets/demo.gif)
 
 The whole Joinville network (~2,900 streets) is **alive**: a macroscopic model injects traffic at
@@ -53,6 +64,12 @@ Each service is split into three layers:
 The **domain layer contains zero framework annotations** — no `@Entity`, no Spring, no Jackson.
 Persistence and messaging map to/from the domain in the infrastructure layer only.
 
+### Why it is built this way
+
+📐 **[Architecture Decision Records](docs/adr/)** — why traffic is modelled macroscopically,
+why the services talk over Kafka instead of REST, why SSE instead of WebSockets, why a jam
+*penalises* a street while a closure *removes* it — and what each of those choices costs.
+
 ---
 
 ## Core concepts (macroscopic model)
@@ -68,11 +85,35 @@ Persistence and messaging map to/from the domain in the infrastructure layer onl
 | `0.50 – 0.80` | `HEAVY` | 🟡 Yellow |
 | `> 0.80` | `JAMMED` | 🔴 Red |
 
-- **Traffic lights** reduce a street's *effective* capacity (green-time fraction), pushing it
-  toward congestion.
+- **Traffic lights** reduce a street's *effective* capacity by a green-time fraction —
+  `effectiveCapacity = floor(capacity × greenRatio^lights)` — pushing it toward congestion.
+  Congestion is always measured against the *effective* capacity, never the raw one.
 - When a street becomes `JAMMED`, traffic-state-service emits a `StreetCongestedEvent`.
   routing-service consumes it and **multiplies that street's routing weight (×10)**, so future
   routes automatically avoid the jam.
+
+### Capacity comes from the real road class
+
+Every street's capacity is derived from its **OpenStreetMap `highway` class** at data-build time
+(`scripts/build-osm-enrichment.py`), so a highway carries far more traffic than a residential street:
+
+| Class | `motorway` | `trunk` | `primary` | `secondary` | `tertiary` | `unclassified` | `residential` | `living_street` |
+|-------|-----------|---------|-----------|-------------|------------|----------------|---------------|-----------------|
+| **Capacity (veh/h)** | 2600 | 2200 | 1600 | 1200 | 900 | 700 | 600 | 400 |
+
+Of the 2,887 OSM edges, most are `residential` (1,664), followed by `primary` (554),
+`secondary` (284), `tertiary` (283), and `motorway` (47).
+
+### Where traffic enters, and what slows it down
+
+- **Sources** — traffic is injected each tick only at arterial classes (`motorway`, `trunk`,
+  `primary`, and their links). The engine picks the `simulation.source-count` (default **14**)
+  highest-capacity candidates, mimicking a city fed by its highways rather than uniformly.
+- **Traffic signals** — the map shows all **129** real OSM signals in the bounding box, of which
+  **97** sit on a node of the simulated graph (matched by id, or snapped within 55 m) and so carry
+  simulation weight. Every street *arriving at* one of those gets a light at
+  `simulation.signal-green-ratio` (default **0.6**), penalising **159 edges** — mostly `primary`
+  (79) and `secondary` (58).
 
 ---
 
@@ -90,19 +131,27 @@ Persistence and messaging map to/from the domain in the infrastructure layer onl
 
 ---
 
-## The seeded network (Joinville, SC)
+## The simulated network (Joinville, SC)
 
-Real streets from Joinville, with capacities proportional to their real-world size:
+**2,892 streets are simulated**: the 2,887 real OSM edges of central Joinville, plus a **curated
+5-street corridor** kept on abstract nodes (`I1`…`I5`) so the classic reroute walkthrough below
+stays readable. Both live in the same engine and are colored by the same congestion math.
+
+The curated corridor:
 
 | Street | Edge | Capacity (veh/h) | Routing weight |
 |--------|------|------------------|----------------|
 | Av. Hermann August Lepper (Beira-Rio) | I1 → I5 | 2000 | 5 |
-| Rua João Colin (one-way) | I1 → I3 | 1800 | 3 |
+| Rua João Colin | I1 → I3 | 1800 | 3 |
 | Rua Dona Francisca | I3 → I5 | 1400 | 3 |
 | Rua Nove de Março | I1 → I2 | 900 | 2 |
 | Rua XV de Novembro | I2 → I3 | 1000 | 2 |
 
-Nodes: `I1=Centro`, `I2=Estação`, `I3=América`, `I5=Saguaçu`.
+Nodes: `I1=Centro`, `I2=Estação`, `I3=América`, `I5=Saguaçu`. Each corridor street is registered
+in routing as a single directed edge, so the corridor is only traversable in the direction shown.
+
+Beyond the simulation, the frontend draws Joinville's full ~7,100 drivable roads as a static
+backdrop, so the city reads as a city rather than as a graph.
 
 ---
 
@@ -196,7 +245,9 @@ docker compose down -v
 | Method | Path | Description |
 |--------|------|-------------|
 | `POST` | `/api/traffic/streets/{id}/flow` | Publish a `FlowInjectedEvent` (`{"vehicles": N}`) |
+| `POST` | `/api/traffic/streets/{id}/release` | Release vehicles from a street |
 | `POST` | `/api/traffic/streets/{id}/traffic-light` | Publish a `TrafficLightAddedEvent` (`{"greenRatio": 0.5}`) |
+| `PATCH` | `/api/traffic/streets/{id}/topology` | Close/open, one-way ↔ two-way, or toggle traffic source |
 | `GET`  | `/api/traffic/streets` | Current state of every street |
 | `GET`  | `/api/traffic/stream` | SSE stream of live street-state updates |
 
@@ -204,7 +255,8 @@ docker compose down -v
 
 | Method | Path | Description |
 |--------|------|-------------|
-| `GET` | `/api/routes?start={id}&end={id}` | Shortest path (Dijkstra) over current weights |
+| `GET` | `/api/routes?start={id}&end={id}` | Shortest path (Dijkstra) between two intersections |
+| `GET` | `/api/routes/between?fromStreet={id}&toStreet={id}` | Shortest path between two *streets*, over the full city graph |
 | `GET` | `/api/routes/state` | Every street with its base weight, penalty, and effective weight |
 
 ---
@@ -220,13 +272,20 @@ npm install
 npm run dev        # http://localhost:5173
 ```
 
-With the backend running (`docker compose up`), the map connects to the SSE stream and:
+A **landing screen** (rotating street-globe + city picker) greets you first; the simulator mounts
+— and the SSE stream opens — only once you enter.
 
-- **Full road network** — Joinville's ~7,100 drivable roads (real OpenStreetMap geometry,
-  bundled as a static asset and drawn with a deck.gl `PathLayer`) form the base layer.
-- The **5 simulated streets** are drawn on top with real OSM geometry, thicker and colored by
-  congestion; **hover** shows a custom deck.gl-picked tooltip, **click** opens an action panel to
-  *Add Traffic Light* or inject vehicles.
+With the backend running (`docker compose up`), the map connects to the SSE stream and draws four
+deck.gl layers:
+
+- **Road backdrop** — Joinville's ~7,100 drivable roads (real OpenStreetMap geometry, bundled as a
+  static asset, `PathLayer`, not interactive) give the city its shape.
+- **Simulated streets** — all ~2,892 of them (`GeoJsonLayer`), colored live by congestion and
+  fully interactive: **hover** shows a custom deck.gl-picked tooltip, **click** opens an action
+  panel to inject vehicles, add a traffic light, or edit topology. The 5 curated corridor streets
+  are drawn thicker than the OSM edges.
+- **Route highlight** — a white halo under the path returned by `routing-service`.
+- **Traffic signals** — amber dots at Joinville's 129 real OSM signals.
 - Commands are sent to the backend REST API; the street recolors 🟢→🟡→🔴 when the backend
   pushes the new state back over SSE — the UI never computes congestion itself.
 - **i18n** — the interface is available in **pt-BR (default)** and **English**, with a language
@@ -263,10 +322,11 @@ on every push.
 urban-traffic-simulator/
 ├── .github/workflows/ci.yml      # backend (matrix) + frontend build/lint
 ├── docker-compose.yml            # Kafka (KRaft) + Postgres + both services
+├── scripts/                      # OSM data pipeline (road classes, signals, routing graph)
 ├── traffic-state-service/        # congestion state, JPA persistence, SSE, Kafka
 │   └── src/main/java/.../{domain,application,infrastructure}
 ├── routing-service/              # Dijkstra GPS engine reacting to congestion
 │   └── src/main/java/.../{domain,application,infrastructure}
-└── frontend/                     # React + deck.gl live map (full OSM network + i18n)
+└── frontend/                     # React + deck.gl live map (landing + full OSM network + i18n)
     └── src/{types,services,store,components,data,i18n}
 ```
