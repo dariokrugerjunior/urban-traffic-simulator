@@ -2,7 +2,9 @@
 PROJECT_CONTEXT.md
 FRONTEND_CONTEXT.md
 frontend/FRONTEND_CONTEXT.md
-docs/
+docs/*
+# ...except the architecture decision records, which are part of the public documentation.
+!docs/adr/
 
 # --- Build output ---
 target/
